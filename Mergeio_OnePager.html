@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mergeio — Investor One Pager 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .page {
+    background: #fff;
+    width: 900px;
+    max-width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: #0f1923;
+    padding: 36px 48px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .header-left h1 {
+    font-size: 38px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .header-left .tagline {
+    color: #0d9488;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 6px;
+    letter-spacing: 0.02em;
+  }
+  .header-left .sub {
+    color: #64748b;
+    font-size: 12px;
+    margin-top: 10px;
+    line-height: 1.5;
+    max-width: 380px;
+  }
+  .header-right {
+    text-align: right;
+  }
+  .badge-raise {
+    background: #0d9488;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: inline-block;
+    letter-spacing: 0.04em;
+  }
+  .header-right .round {
+    color: #94a3b8;
+    font-size: 11px;
+    margin-top: 6px;
+  }
+
+  /* ── BODY ── */
+  .body { padding: 36px 48px; }
+
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 28px; }
+
+  .section-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #0d9488;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  /* Problem cards */
+  .prob-card {
+    background: #f8fafc;
+    border: 0.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .prob-card .icon { font-size: 22px; margin-bottom: 8px; }
+  .prob-card h3 { font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 4px; }
+  .prob-card p { font-size: 11px; color: #64748b; line-height: 1.5; }
+
+  /* Stat cards */
+  .stat-card {
+    background: #f0fdfa;
+    border: 0.5px solid #99f6e4;
+    border-radius: 10px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .stat-card .val { font-size: 22px; font-weight: 700; color: #0d9488; line-height: 1; }
+  .stat-card .lbl { font-size: 10px; color: #64748b; margin-top: 4px; line-height: 1.3; }
+
+  /* Feature list */
+  .feature-block { background: #f8fafc; border: 0.5px solid #e2e8f0; border-radius: 10px; padding: 16px; }
+  .feature-block h3 { font-size: 12px; font-weight: 600; color: #1e293b; margin-bottom: 10px; }
+  .feature-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+  .feature-item .dot { width: 6px; height: 6px; background: #0d9488; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .feature-item span { font-size: 11px; color: #334155; line-height: 1.5; }
+
+  /* Business model */
+  .biz-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border: 0.5px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+  .biz-row .biz-label { font-size: 12px; font-weight: 500; color: #1e293b; }
+  .biz-row .biz-price { font-size: 13px; font-weight: 700; color: #0d9488; }
+  .biz-row .biz-note { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+
+  /* Roadmap */
+  .timeline { display: flex; gap: 0; }
+  .tl-item { flex: 1; padding: 12px; border-left: 2px solid #e2e8f0; }
+  .tl-item:first-child { border-left: 2px solid #0d9488; }
+  .tl-item .tl-q { font-size: 10px; font-weight: 700; color: #0d9488; margin-bottom: 6px; }
+  .tl-item .tl-mi { font-size: 10px; color: #64748b; line-height: 1.6; }
+
+  /* Tech stack */
+  .tech-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill {
+    background: #f1f5f9;
+    border: 0.5px solid #e2e8f0;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 500;
+    color: #475569;
+    padding: 4px 10px;
+  }
+
+  /* Links */
+  .links-bar {
+    background: #0f1923;
+    padding: 20px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .link-item { display: flex; align-items: center; gap: 6px; }
+  .link-item .lk-icon { font-size: 13px; }
+  .link-item a { font-size: 11px; color: #94a3b8; text-decoration: none; }
+  .link-item a:hover { color: #0d9488; }
+  .link-item .lk-label { font-size: 10px; color: #475569; display: block; }
+
+  hr.divider { border: none; border-top: 0.5px solid #e2e8f0; margin: 0 0 24px; }
+
+  @media print {
+    body { padding: 0; background: #fff; }
+    .page { box-shadow: none; border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Mergeio</h1>
+      <div class="tagline">AI-POWERED SME ACQUISITION MARKETPLACE</div>
+      <div class="sub">Upload a P&L → Instant AI valuation score → Connect with buyers or sellers.<br>The Bloomberg Terminal for SME acquisitions.</div>
+    </div>
+    <div class="header-right">
+      <div class="badge-raise">PRE-SEED · $250K</div>
+      <div class="round">mergeio.io · 2026</div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- PROBLEM -->
+    <div class="section-title">The Problem</div>
+    <div class="grid-3" style="margin-bottom:28px">
+      <div class="prob-card">
+        <div class="icon">⏳</div>
+        <h3>Too slow</h3>
+        <p>Valuations take days or weeks. Brokers still work manually.</p>
+      </div>
+      <div class="prob-card">
+        <div class="icon">💸</div>
+        <h3>Too expensive</h3>
+        <p>A credible valuation costs $5,000+ with a consultant.</p>
+      </div>
+      <div class="prob-card">
+        <div class="icon">🎲</div>
+        <h3>No objectivity</h3>
+        <p>No data-driven way to compare acquisition targets.</p>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- MARKET + SOLUTION -->
+    <div class="grid-2">
+      <div>
+        <div class="section-title">Market Opportunity</div>
+        <div class="grid-4" style="margin-bottom:0">
+          <div class="stat-card"><div class="val">$2T+</div><div class="lbl">US SME M&A /year</div></div>
+          <div class="stat-card"><div class="val">28M</div><div class="lbl">SMEs in the US</div></div>
+          <div class="stat-card"><div class="val">10%</div><div class="lbl">Avg broker fee</div></div>
+          <div class="stat-card"><div class="val">1–2%</div><div class="lbl">Mergeio fee</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Our Solution — Live MVP</div>
+        <div class="feature-block">
+          <div class="feature-item"><div class="dot"></div><span><strong>AI P&L Analysis</strong> — upload Excel → instant health score (0–100) + EBITDA valuation range</span></div>
+          <div class="feature-item"><div class="dot"></div><span><strong>Live Marketplace</strong> — filter by sector, score, region, price</span></div>
+          <div class="feature-item"><div class="dot"></div><span><strong>Market Terminal</strong> — Bloomberg-style real-time scoring dashboard</span></div>
+          <div class="feature-item"><div class="dot"></div><span><strong>Secure Auth</strong> — JWT + bcrypt, buyer/seller role accounts</span></div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- BUSINESS MODEL + TECH -->
+    <div class="grid-2">
+      <div>
+        <div class="section-title">Business Model</div>
+        <div class="biz-row">
+          <div><div class="biz-label">SaaS Subscriptions</div><div class="biz-note">Buyers $99/mo · Sellers $149/mo</div></div>
+          <div class="biz-price">Recurring</div>
+        </div>
+        <div class="biz-row">
+          <div><div class="biz-label">Transaction Fee</div><div class="biz-note">On completed deal value</div></div>
+          <div class="biz-price">1–2%</div>
+        </div>
+        <div class="biz-row">
+          <div><div class="biz-label">Premium Analytics</div><div class="biz-note">Sector benchmarks · API for funds</div></div>
+          <div class="biz-price">$499/mo</div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Tech Stack &amp; Status</div>
+        <div class="feature-block">
+          <div style="margin-bottom:10px">
+            <div class="tech-pills">
+              <span class="pill">Python</span><span class="pill">Flask</span>
+              <span class="pill">Pandas / NumPy</span><span class="pill">SQLite → PostgreSQL</span>
+              <span class="pill">JWT / bcrypt</span><span class="pill">Render.com</span>
+              <span class="pill">GitHub CI/CD</span>
+            </div>
+          </div>
+          <div style="font-size:11px;color:#64748b;margin-top:8px;line-height:1.6">
+            ✅ 7 phases shipped &amp; in production<br>
+            🔗 Live demo: <strong style="color:#0d9488">ma-plateforme-ma.onrender.com</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- ROADMAP -->
+    <div class="section-title">18-Month Roadmap</div>
+    <div class="timeline" style="margin-bottom:28px">
+      <div class="tl-item">
+        <div class="tl-q">Q3 2026</div>
+        <div class="tl-mi">PostgreSQL migration<br>50 beta sellers<br>First paid users</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-q">Q4 2026</div>
+        <div class="tl-mi">Messaging system<br>Stripe payments<br>SEO content launch</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-q">Q1 2027</div>
+        <div class="tl-mi">US market launch<br>3 firm partnerships<br>$15K MRR target</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-q">Q2 2027</div>
+        <div class="tl-mi">Mobile app iOS/Android<br>Series A prep<br>$40K MRR target</div>
+      </div>
+    </div>
+
+    <!-- USE OF FUNDS -->
+    <hr class="divider">
+    <div class="section-title">Use of Funds — $250K Pre-Seed</div>
+    <div class="grid-4" style="margin-bottom:0">
+      <div class="stat-card"><div class="val" style="font-size:18px">40%</div><div class="lbl">Product &amp; Engineering</div></div>
+      <div class="stat-card"><div class="val" style="font-size:18px">30%</div><div class="lbl">Sales &amp; BD</div></div>
+      <div class="stat-card"><div class="val" style="font-size:18px">20%</div><div class="lbl">Marketing &amp; SEO</div></div>
+      <div class="stat-card"><div class="val" style="font-size:18px">10%</div><div class="lbl">Legal &amp; Operations</div></div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER LINKS -->
+  <div class="links-bar">
+    <div class="link-item">
+      <span class="lk-icon">🔗</span>
+      <div>
+        <span class="lk-label">Live Demo</span>
+        <a href="https://ma-plateforme-ma.onrender.com" target="_blank">ma-plateforme-ma.onrender.com</a>
+      </div>
+    </div>
+    <div class="link-item">
+      <span class="lk-icon">💻</span>
+      <div>
+        <span class="lk-label">GitHub</span>
+        <a href="https://github.com/YOUR_USERNAME/mergeio" target="_blank">github.com/YOUR_USERNAME/mergeio</a>
+      </div>
+    </div>
+    <div class="link-item">
+      <span class="lk-icon">📅</span>
+      <div>
+        <span class="lk-label">Book a Meeting</span>
+        <a href="https://calendly.com/YOUR_LINK" target="_blank">calendly.com/mergeio</a>
+      </div>
+    </div>
+    <div class="link-item">
+      <span class="lk-icon">📧</span>
+      <div>
+        <span class="lk-label">Email</span>
+        <a href="mailto:contact@mergeio.io">contact@mergeio.io</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
