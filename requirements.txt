@@ -1,0 +1,20 @@
+# ============================================================
+#  REQUIREMENTS.TXT — Dépendances Python
+# ============================================================
+#
+#  Ce fichier liste toutes les bibliothèques dont notre
+#  application a besoin. Render (et pip) le lit et installe
+#  automatiquement tout ce qui est nécessaire.
+#
+#  Commande équivalente en local :
+#  pip install -r requirements.txt
+#
+# ============================================================
+
+flask==3.0.0          # le serveur web
+pandas==2.1.4         # lecture et analyse des fichiers Excel
+openpyxl==3.1.2       # lecture des fichiers .xlsx (utilisé par pandas)
+bcrypt==4.1.2         # hashage sécurisé des mots de passe
+pyjwt==2.8.0          # génération et vérification des tokens JWT
+gunicorn==21.2.0      # serveur de production (remplace flask run)
+python-dotenv==1.0.0  # lecture des variables d'environnement (.env)
