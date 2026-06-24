@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M&A IA — Connexion</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:    #0e0f11;
+    --paper:  #f5f2ec;
+    --cream:  #ede9e0;
+    --gold:   #c8a84b;
+    --green:  #2a9d5c;
+    --red:    #d64242;
+    --muted:  #6b6760;
+    --border: #d4cfc5;
+    --font-d: 'DM Serif Display', serif;
+    --font-b: 'Manrope', sans-serif;
+    --font-m: 'DM Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-b);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  /* ── Carte centrale ──────────────────────────────── */
+  .card {
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 440px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,.4);
+  }
+
+  /* ── En-tête de la carte ─────────────────────────── */
+  .card-header {
+    background: var(--ink);
+    padding: 28px 32px;
+    text-align: center;
+  }
+  .logo { font-family: var(--font-m); font-size: 13px; letter-spacing: .12em; background: var(--gold); color: var(--ink); padding: 4px 10px; border-radius: 2px; font-weight: 600; display: inline-block; margin-bottom: 14px; }
+  .card-title { font-family: var(--font-d); font-size: 24px; margin-bottom: 4px; }
+  .card-sub { font-family: var(--font-m); font-size: 11px; color: rgba(255,255,255,.4); letter-spacing: .07em; }
+
+  /* ── Onglets Connexion / Inscription ─────────────── */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .tab {
+    flex: 1; padding: 14px; text-align: center;
+    font-family: var(--font-m); font-size: 11px; letter-spacing: .08em;
+    text-transform: uppercase; cursor: pointer; color: var(--muted);
+    border-bottom: 2px solid transparent; transition: all .2s;
+    background: none; border-top: none; border-left: none; border-right: none;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--ink); border-bottom-color: var(--ink); font-weight: 600; }
+
+  /* ── Corps du formulaire ─────────────────────────── */
+  .card-body { padding: 28px 32px; }
+
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-family: var(--font-m); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .form-input {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 4px;
+    font-family: var(--font-b); font-size: 14px;
+    background: var(--paper); color: var(--ink);
+    outline: none; transition: border-color .2s;
+  }
+  .form-input:focus { border-color: var(--ink); }
+  .form-input::placeholder { color: var(--muted); opacity: .6; }
+
+  /* ── Sélecteur de rôle ───────────────────────────── */
+  .role-select { display: flex; gap: 8px; margin-bottom: 18px; }
+  .role-btn {
+    flex: 1; padding: 10px 8px; border: 1px solid var(--border);
+    border-radius: 4px; text-align: center; cursor: pointer;
+    transition: all .2s; background: var(--paper);
+  }
+  .role-btn:hover { border-color: var(--ink); }
+  .role-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .role-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+  .role-label { font-family: var(--font-m); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+
+  /* ── Bouton principal ────────────────────────────── */
+  .btn-primary {
+    width: 100%; padding: 12px;
+    background: var(--ink); color: var(--paper);
+    border: none; border-radius: 4px;
+    font-family: var(--font-m); font-size: 12px; letter-spacing: .09em;
+    font-weight: 600; cursor: pointer; transition: opacity .2s;
+    text-transform: uppercase;
+  }
+  .btn-primary:hover { opacity: .85; }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Message de statut ───────────────────────────── */
+  .status-msg {
+    padding: 10px 12px; border-radius: 4px; margin-bottom: 16px;
+    font-size: 13px; display: none;
+  }
+  .status-msg.succes { background: #e8f7ef; color: #1a5c38; border: 1px solid #a8d5b8; }
+  .status-msg.erreur { background: #fdeaea; color: #7b1d1d; border: 1px solid #f5b8b8; }
+
+  /* ── Séparateur ──────────────────────────────────── */
+  .separateur { text-align: center; margin: 20px 0; position: relative; }
+  .separateur::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--border); }
+  .separateur span { background: var(--paper); padding: 0 12px; font-family: var(--font-m); font-size: 10px; color: var(--muted); letter-spacing: .06em; position: relative; }
+
+  /* ── Indicateur de sécurité MDP ──────────────────── */
+  .password-strength { height: 3px; border-radius: 10px; margin-top: 6px; background: var(--border); overflow: hidden; }
+  .password-strength-fill { height: 100%; border-radius: 10px; width: 0; transition: width .3s, background .3s; }
+
+  /* ── Pied de carte ───────────────────────────────── */
+  .card-footer { padding: 16px 32px; background: var(--cream); text-align: center; border-top: 1px solid var(--border); }
+  .card-footer p { font-family: var(--font-m); font-size: 10px; color: var(--muted); letter-spacing: .05em; line-height: 1.6; }
+
+  /* ── Champ conditionnel (inscription seulement) ──── */
+  .inscription-only { display: none; }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- En-tête -->
+  <div class="card-header">
+    <span class="logo">M&A·IA</span>
+    <div class="card-title">Plateforme M&A IA</div>
+    <div class="card-sub">Marché des entreprises à céder · Accès sécurisé</div>
+  </div>
+
+  <!-- Onglets -->
+  <div class="tabs">
+    <button class="tab active" onclick="basculerOnglet('connexion')">Connexion</button>
+    <button class="tab"        onclick="basculerOnglet('inscription')">Créer un compte</button>
+  </div>
+
+  <!-- Corps -->
+  <div class="card-body">
+
+    <!-- Message de statut (succès ou erreur) -->
+    <div class="status-msg" id="status-msg"></div>
+
+    <!-- ── Champs communs ──────────────────────────── -->
+    <div class="form-group">
+      <label class="form-label">Adresse email</label>
+      <input class="form-input" type="email" id="email" placeholder="vous@entreprise.com" autocomplete="email">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Mot de passe</label>
+      <input class="form-input" type="password" id="mot-de-passe" placeholder="••••••••" autocomplete="current-password" oninput="evaluerMDP(this.value)">
+      <div class="password-strength"><div class="password-strength-fill" id="mdp-force"></div></div>
+    </div>
+
+    <!-- ── Champs inscription uniquement ──────────── -->
+    <div class="inscription-only" id="champs-inscription">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Prénom</label>
+          <input class="form-input" type="text" id="prenom" placeholder="Jean">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Nom</label>
+          <input class="form-input" type="text" id="nom" placeholder="Dupont">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Entreprise (optionnel)</label>
+        <input class="form-input" type="text" id="entreprise" placeholder="Votre société">
+      </div>
+
+      <!-- Sélecteur de rôle -->
+      <div class="form-group">
+        <label class="form-label">Je suis…</label>
+        <div class="role-select">
+          <div class="role-btn active" onclick="selectionnerRole('acheteur', this)">
+            <span class="role-icon">🔍</span>
+            <span class="role-label">Acheteur</span>
+          </div>
+          <div class="role-btn" onclick="selectionnerRole('vendeur', this)">
+            <span class="role-icon">🏢</span>
+            <span class="role-label">Vendeur</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Préférences acheteur -->
+      <div id="prefs-acheteur">
+        <div class="form-group">
+          <label class="form-label">Budget d'acquisition max (€)</label>
+          <input class="form-input" type="number" id="budget-max" placeholder="500000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Score minimum recherché (0–100)</label>
+          <input class="form-input" type="number" id="score-min" placeholder="70" min="0" max="100">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bouton principal -->
+    <button class="btn-primary" id="btn-action" onclick="soumettre()">
+      Se connecter →
+    </button>
+
+    <div class="separateur"><span>ou</span></div>
+
+    <!-- Démo rapide -->
+    <button class="btn-primary"
+            style="background:transparent;color:var(--ink);border:1px solid var(--border)"
+            onclick="connexionDemo()">
+      Accès démo (sans compte)
+    </button>
+
+  </div>
+
+  <!-- Pied -->
+  <div class="card-footer">
+    <p>Vos données sont chiffrées et ne sont jamais partagées.<br>
+    Conforme RGPD · Hébergement européen</p>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  LOGIN.JS — Logique de la page de connexion
+// ═══════════════════════════════════════════════════════
+
+// État de la page (connexion ou inscription)
+let modeActuel = 'connexion';
+let roleSelectionne = 'acheteur';
+
+
+// ── Basculer entre les onglets ───────────────────────
+function basculerOnglet(mode) {
+    modeActuel = mode;
+
+    // Mettre à jour les onglets visuellement
+    document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', (i === 0 && mode === 'connexion') || (i === 1 && mode === 'inscription'));
+    });
+
+    // Afficher/masquer les champs inscription
+    const champsInscription = document.getElementById('champs-inscription');
+    champsInscription.style.display = mode === 'inscription' ? 'block' : 'none';
+
+    // Changer le texte du bouton
+    document.getElementById('btn-action').textContent =
+        mode === 'connexion' ? 'Se connecter →' : 'Créer mon compte →';
+
+    cacherMessage();
+}
+
+
+// ── Sélectionner le rôle ─────────────────────────────
+function selectionnerRole(role, bouton) {
+    roleSelectionne = role;
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+    bouton.classList.add('active');
+
+    // Afficher/masquer les préférences acheteur
+    document.getElementById('prefs-acheteur').style.display =
+        role === 'acheteur' ? 'block' : 'none';
+}
+
+
+// ── Indicateur de force du mot de passe ──────────────
+// Donne un retour visuel immédiat sur la sécurité du MDP
+function evaluerMDP(mdp) {
+    const barre = document.getElementById('mdp-force');
+    let force = 0;
+    if (mdp.length >= 8)              force += 25;   // longueur minimale
+    if (/[A-Z]/.test(mdp))            force += 25;   // majuscule
+    if (/[0-9]/.test(mdp))            force += 25;   // chiffre
+    if (/[^A-Za-z0-9]/.test(mdp))     force += 25;   // caractère spécial
+
+    barre.style.width      = force + '%';
+    barre.style.background = force <= 25 ? '#d64242' :
+                             force <= 50 ? '#c8a84b' :
+                             force <= 75 ? '#f59e0b' : '#2a9d5c';
+}
+
+
+// ── Soumettre le formulaire ───────────────────────────
+async function soumettre() {
+    const email = document.getElementById('email').value.trim();
+    const mdp   = document.getElementById('mot-de-passe').value;
+
+    if (!email || !mdp) {
+        afficherMessage('Veuillez remplir tous les champs obligatoires', 'erreur');
+        return;
+    }
+
+    const btn = document.getElementById('btn-action');
+    btn.disabled     = true;
+    btn.textContent  = 'Chargement…';
+
+    try {
+        if (modeActuel === 'connexion') {
+            await seConnecter(email, mdp);
+        } else {
+            await sInscrire(email, mdp);
+        }
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = modeActuel === 'connexion' ? 'Se connecter →' : 'Créer mon compte →';
+    }
+}
+
+
+// ── Connexion ─────────────────────────────────────────
+async function seConnecter(email, mdp) {
+    try {
+        const reponse = await fetch('/api/auth/login', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ email, mot_de_passe: mdp }),
+        });
+
+        const data = await reponse.json();
+
+        if (!reponse.ok) {
+            afficherMessage(data.erreur || 'Erreur de connexion', 'erreur');
+            return;
+        }
+
+        // ── Stocker le token dans le navigateur ───────
+        // localStorage = stockage persistant côté navigateur
+        // Le token sera envoyé à chaque requête future
+        localStorage.setItem('ma_token',       data.token);
+        localStorage.setItem('ma_utilisateur', JSON.stringify(data.utilisateur));
+
+        afficherMessage(`Bienvenue ${data.utilisateur.prenom} ! Redirection…`, 'succes');
+
+        // Rediriger selon le rôle après 1 seconde
+        setTimeout(() => {
+            const destination = data.utilisateur.role === 'vendeur'
+                ? '/static/dashboard_ma.html'      // vendeur → analyser son P&L
+                : '/static/marketplace_ma.html';   // acheteur → parcourir le marché
+            window.location.href = destination;
+        }, 1200);
+
+    } catch (e) {
+        afficherMessage('Serveur inaccessible. Lancez : python app.py', 'erreur');
+    }
+}
+
+
+// ── Inscription ───────────────────────────────────────
+async function sInscrire(email, mdp) {
+    const prenom    = document.getElementById('prenom').value.trim();
+    const nom       = document.getElementById('nom').value.trim();
+    const entreprise = document.getElementById('entreprise').value.trim();
+    const budgetMax = parseInt(document.getElementById('budget-max').value) || 0;
+    const scoreMin  = parseInt(document.getElementById('score-min').value)  || 50;
+
+    if (!prenom || !nom) {
+        afficherMessage('Prénom et nom sont obligatoires', 'erreur');
+        return;
+    }
+    if (mdp.length < 8) {
+        afficherMessage('Le mot de passe doit faire au moins 8 caractères', 'erreur');
+        return;
+    }
+
+    try {
+        const reponse = await fetch('/api/auth/register', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                email, mot_de_passe: mdp,
+                prenom, nom, entreprise,
+                role:            roleSelectionne,
+                budget_max:      budgetMax,
+                score_min:       scoreMin,
+                secteurs_cibles: [],
+            }),
+        });
+
+        const data = await reponse.json();
+
+        if (!reponse.ok) {
+            afficherMessage(data.erreur || 'Erreur lors de l\'inscription', 'erreur');
+            return;
+        }
+
+        afficherMessage('Compte créé avec succès ! Connectez-vous.', 'succes');
+        setTimeout(() => basculerOnglet('connexion'), 1500);
+
+    } catch (e) {
+        afficherMessage('Serveur inaccessible. Lancez : python app.py', 'erreur');
+    }
+}
+
+
+// ── Accès démo ────────────────────────────────────────
+function connexionDemo() {
+    // Créer un utilisateur fictif en localStorage pour la démo
+    localStorage.setItem('ma_token', 'demo-token');
+    localStorage.setItem('ma_utilisateur', JSON.stringify({
+        id:       'demo',
+        prenom:   'Visiteur',
+        nom:      'Démo',
+        email:    'demo@ma-ia.com',
+        role:     'acheteur',
+        entreprise: 'Mode démonstration'
+    }));
+    afficherMessage('Accès démo activé. Redirection…', 'succes');
+    setTimeout(() => window.location.href = '/static/marketplace_ma.html', 1000);
+}
+
+
+// ── Afficher / cacher les messages ────────────────────
+function afficherMessage(texte, type) {
+    const msg = document.getElementById('status-msg');
+    msg.textContent  = texte;
+    msg.className    = `status-msg ${type}`;
+    msg.style.display = 'block';
+}
+function cacherMessage() {
+    document.getElementById('status-msg').style.display = 'none';
+}
+
+// Soumettre avec la touche Entrée
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') soumettre();
+});
+</script>
+
+</body>
+</html>
