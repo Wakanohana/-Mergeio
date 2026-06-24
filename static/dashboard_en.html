@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M&A Intelligence — P&L Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --ink:    #0e0f11;
+    --paper:  #f5f2ec;
+    --cream:  #ede9e0;
+    --gold:   #c8a84b;
+    --gold2:  #e8c96b;
+    --green:  #2d6a4f;
+    --green2: #52b788;
+    --red:    #9b2226;
+    --amber:  #ae6b10;
+    --muted:  #6b6760;
+    --border: #d4cfc5;
+    --radius: 3px;
+    --font-display: 'DM Serif Display', serif;
+    --font-body:    'Manrope', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--font-body); line-height: 1.6; min-height: 100vh; }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  /* Header */
+  .header { border-bottom: 1.5px solid var(--ink); padding-bottom: 20px; margin-bottom: 40px; display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .header-brand { display: flex; align-items: baseline; gap: 14px; }
+  .logo-mark { font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 4px 8px; border-radius: var(--radius); }
+  .header h1 { font-family: var(--font-display); font-size: 26px; font-weight: 400; letter-spacing: -.01em; }
+  .header-meta { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: .06em; }
+
+  /* Nav links */
+  .nav-links { display: flex; gap: 4px; margin-left: 16px; }
+  .nav-link { font-family: var(--font-mono); font-size: 10px; letter-spacing: .07em; color: var(--muted); padding: 4px 10px; border-radius: var(--radius); text-decoration: none; transition: all .15s; border: 1px solid transparent; }
+  .nav-link:hover { border-color: var(--border); color: var(--ink); }
+  .nav-link.active { background: var(--ink); color: var(--paper); }
+
+  /* Drop zone */
+  .drop-zone { border: 1.5px dashed var(--border); border-radius: 6px; padding: 52px 32px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; background: var(--cream); position: relative; }
+  .drop-zone:hover, .drop-zone.drag-over { border-color: var(--gold); background: #f9f5eb; }
+  .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .drop-icon { font-size: 32px; margin-bottom: 14px; display: block; }
+  .drop-title { font-family: var(--font-display); font-size: 20px; margin-bottom: 6px; }
+  .drop-sub { font-size: 13px; color: var(--muted); }
+  .drop-hint { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 18px; letter-spacing: .05em; }
+
+  /* Loading */
+  .loading { display: none; text-align: center; padding: 40px; }
+  .spinner { width: 32px; height: 32px; border: 2.5px solid var(--border); border-top-color: var(--ink); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #results { display: none; }
+
+  /* Company banner */
+  .company-banner { background: var(--ink); color: var(--paper); border-radius: 6px; padding: 24px 28px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .company-name { font-family: var(--font-display); font-size: 22px; }
+  .company-meta { font-family: var(--font-mono); font-size: 11px; opacity: .55; letter-spacing: .07em; margin-top: 4px; }
+  .score-badge { text-align: center; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15); border-radius: 6px; padding: 12px 22px; min-width: 110px; }
+  .score-number { font-family: var(--font-display); font-size: 42px; line-height: 1; }
+  .score-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; opacity: .6; text-transform: uppercase; margin-top: 4px; }
+  .score-qual { font-size: 12px; margin-top: 6px; font-weight: 600; }
+
+  /* Grid & cards */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+  .card { background: white; border: 1px solid var(--border); border-radius: 6px; padding: 20px 22px; }
+  .card-title { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+
+  /* KPIs */
+  .kpi-value { font-family: var(--font-display); font-size: 28px; letter-spacing: -.02em; line-height: 1.1; }
+  .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .kpi-trend { font-family: var(--font-mono); font-size: 12px; margin-top: 8px; }
+  .up { color: var(--green); }
+  .dn { color: var(--red); }
+
+  /* Score bars */
+  .score-row { margin-bottom: 14px; }
+  .score-row:last-child { margin-bottom: 0; }
+  .score-row-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+  .score-row-label { font-size: 13px; font-weight: 500; }
+  .score-row-pts { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .bar-track { height: 6px; background: var(--cream); border-radius: 10px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 10px; transition: width 1.2s cubic-bezier(.16,1,.3,1); background: var(--ink); width: 0; }
+  .score-row-note { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  /* Valuation */
+  .valuation-card { background: var(--ink); color: var(--paper); border-radius: 6px; padding: 24px 28px; margin-bottom: 16px; }
+  .valuation-card .card-title { color: rgba(255,255,255,.45); }
+  .val-range { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .val-main { font-family: var(--font-display); font-size: 36px; letter-spacing: -.02em; }
+  .val-separator { font-size: 20px; opacity: .3; }
+  .val-sub { font-size: 12px; opacity: .5; margin-top: 4px; }
+  .val-method { font-family: var(--font-mono); font-size: 11px; opacity: .4; margin-top: 14px; letter-spacing: .06em; }
+
+  /* Sparklines */
+  .sparkline-row { display: flex; gap: 6px; align-items: flex-end; height: 48px; margin-top: 12px; }
+  .spark-bar { flex: 1; border-radius: 2px 2px 0 0; background: var(--ink); opacity: .15; transition: height .8s cubic-bezier(.16,1,.3,1); }
+  .spark-bar.active { opacity: .9; }
+  .spark-labels { display: flex; gap: 6px; margin-top: 4px; }
+  .spark-label { flex: 1; text-align: center; font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+
+  /* Data table */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: right; padding: 6px 8px; border-bottom: 1.5px solid var(--border); }
+  .data-table th:first-child { text-align: left; }
+  .data-table td { padding: 8px 8px; border-bottom: 1px solid var(--cream); text-align: right; }
+  .data-table td:first-child { text-align: left; font-weight: 500; }
+  .data-table tr.total td { font-weight: 700; background: var(--cream); border-top: 1.5px solid var(--border); }
+  .data-table tr.section td { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; background: var(--paper); padding: 10px 8px 4px; border-bottom: none; }
+
+  /* Footer */
+  .report-footer { border-top: 1px solid var(--border); margin-top: 32px; padding-top: 16px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .report-footer span { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: .06em; }
+  .btn-reset { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; letter-spacing: .07em; background: none; border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: var(--radius); cursor: pointer; transition: border-color .15s, color .15s; margin-bottom: 24px; }
+  .btn-reset:hover { border-color: var(--ink); color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <div class="header-brand">
+      <span class="logo-mark">M&A·AI</span>
+      <h1>P&L Analysis</h1>
+      <nav class="nav-links">
+        <a class="nav-link active" href="dashboard_en.html">Analyze</a>
+        <a class="nav-link" href="marketplace_en.html">Marketplace</a>
+        <a class="nav-link" href="terminal_en.html">Live Terminal</a>
+      </nav>
+    </div>
+    <span class="header-meta">PHASE 1 · MVP v0.1</span>
+  </header>
+
+  <!-- Drop zone -->
+  <div id="drop-zone" class="drop-zone">
+    <input type="file" id="file-input" accept=".xlsx,.xls,.csv">
+    <span class="drop-icon">📊</span>
+    <p class="drop-title">Drop your P&L file here</p>
+    <p class="drop-sub">Drag & drop or click to select your Income Statement</p>
+    <p class="drop-hint">ACCEPTED FORMATS: .XLSX · .XLS · .CSV</p>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p style="font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:.08em">AI ANALYSIS IN PROGRESS…</p>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <button class="btn-reset" onclick="resetApp()">← Analyze another file</button>
+
+    <div class="company-banner">
+      <div>
+        <div class="company-name" id="res-nom">—</div>
+        <div class="company-meta" id="res-meta">—</div>
+      </div>
+      <div class="score-badge">
+        <div class="score-number" id="res-score">—</div>
+        <div class="score-label">Health Score / 100</div>
+        <div class="score-qual" id="res-qual">—</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Revenue (latest fiscal year)</div>
+        <div class="kpi-value" id="kpi-ca">—</div>
+        <div class="kpi-sub">Total Revenue</div>
+        <div class="kpi-trend" id="kpi-ca-trend">—</div>
+        <div class="sparkline-row" id="spark-ca"></div>
+        <div class="spark-labels" id="spark-ca-labels"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">EBITDA (latest fiscal year)</div>
+        <div class="kpi-value" id="kpi-ebitda">—</div>
+        <div class="kpi-sub">Earnings Before Interest, Taxes, Depreciation & Amortization</div>
+        <div class="kpi-trend" id="kpi-ebitda-trend">—</div>
+        <div class="sparkline-row" id="spark-ebitda"></div>
+        <div class="spark-labels" id="spark-ebitda-labels"></div>
+      </div>
+    </div>
+
+    <!-- Valuation -->
+    <div class="valuation-card">
+      <div class="card-title">Estimated Valuation · EBITDA Multiple Method</div>
+      <div class="val-range">
+        <div class="val-main" id="val-bas">—</div>
+        <div class="val-separator">–</div>
+        <div class="val-main" id="val-haut">—</div>
+      </div>
+      <div class="val-sub" id="val-centre">—</div>
+      <div class="val-method" id="val-method">—</div>
+    </div>
+
+    <!-- Score details -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Financial Health Score — Breakdown</div>
+      <div id="score-details"></div>
+    </div>
+
+    <!-- Data table -->
+    <div class="card">
+      <div class="card-title">Extracted Financial Data</div>
+      <table class="data-table" id="data-table"></table>
+    </div>
+
+    <div class="report-footer">
+      <span id="footer-fichier">—</span>
+      <span id="footer-date">—</span>
+      <span>M&A INTELLIGENCE · AI-POWERED ANALYSIS</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Drop zone ─────────────────────────────────────────────
+const dropZone  = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) traiterFichier(file);
+});
+fileInput.addEventListener('change', e => { if (e.target.files[0]) traiterFichier(e.target.files[0]); });
+
+// ── Read Excel file ───────────────────────────────────────
+function traiterFichier(file) {
+  document.getElementById('drop-zone').style.display = 'none';
+  document.getElementById('loading').style.display   = 'block';
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb   = XLSX.read(e.target.result, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows  = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
+    const data  = analyserDonnees(rows, file.name);
+    afficherResultats(data, file.name);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── Extract key figures ───────────────────────────────────
+function extraireIndicateurs(rows) {
+  let headerRow = -1, annees = [], anneesCols = {};
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const found = r ? r.filter(v => typeof v === 'number' && v > 1990 && v < 2100) : [];
+    if (found.length >= 2) {
+      headerRow = i; annees = found;
+      r.forEach((v, ci) => { if (typeof v === 'number' && v > 1990 && v < 2100) anneesCols[v] = ci; });
+      break;
+    }
+  }
+  if (headerRow < 0) return null;
+  const index = {};
+  for (let i = headerRow + 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || !r[0]) continue;
+    const nom = String(r[0]).trim();
+    index[nom] = {};
+    annees.forEach(a => {
+      const val = r[anneesCols[a]];
+      index[nom][a] = (typeof val === 'number') ? val : 0;
+    });
+  }
+  function chercher(motCle) {
+    const cle = motCle.toLowerCase();
+    return Object.keys(index).find(k => k.toLowerCase().includes(cle)) || null;
+  }
+  return {
+    index, annees,
+    nomCA:     chercher("chiffre d'affaires") || chercher("revenue") || chercher("sales"),
+    nomEBITDA: chercher("ebitda"),
+    nomNet:    chercher("résultat net") || chercher("net income") || chercher("net profit"),
+  };
+}
+
+// ── Scoring algorithm ─────────────────────────────────────
+function analyserDonnees(rows, nomFichier) {
+  const ext = extraireIndicateurs(rows);
+  if (!ext) return null;
+  const { index, annees, nomCA, nomEBITDA, nomNet } = ext;
+  const derniere = annees[annees.length - 1];
+  const premiere = annees[0];
+  const ca     = a => (nomCA     ? index[nomCA][a]     : 0) || 0;
+  const ebitda = a => (nomEBITDA ? index[nomEBITDA][a] : 0) || 0;
+  const net    = a => (nomNet    ? index[nomNet][a]     : 0) || 0;
+
+  // Criterion 1: Revenue Growth
+  const revenueGrowth = ca(premiere) > 0 ? (ca(derniere) / ca(premiere) - 1) * 100 : 0;
+  let ptsGrowth, levelGrowth;
+  if      (revenueGrowth > 20) { ptsGrowth = 25; levelGrowth = "Excellent ✅"; }
+  else if (revenueGrowth > 10) { ptsGrowth = 15; levelGrowth = "Good 👍"; }
+  else if (revenueGrowth > 0)  { ptsGrowth = 8;  levelGrowth = "Stable ➡️"; }
+  else                          { ptsGrowth = 0;  levelGrowth = "Declining ⚠️"; }
+
+  // Criterion 2: EBITDA Margin
+  const ebitdaMargin = ca(derniere) > 0 ? ebitda(derniere) / ca(derniere) * 100 : 0;
+  let ptsEBITDA, levelEBITDA;
+  if      (ebitdaMargin > 20) { ptsEBITDA = 25; levelEBITDA = "Excellent ✅"; }
+  else if (ebitdaMargin > 10) { ptsEBITDA = 18; levelEBITDA = "Good 👍"; }
+  else if (ebitdaMargin > 5)  { ptsEBITDA = 10; levelEBITDA = "Acceptable ➡️"; }
+  else                         { ptsEBITDA = 3;  levelEBITDA = "Weak ⚠️"; }
+
+  // Criterion 3: Net Profitability
+  const netMargin = ca(derniere) > 0 ? net(derniere) / ca(derniere) * 100 : 0;
+  let ptsNet, levelNet;
+  if      (netMargin > 10) { ptsNet = 25; levelNet = "Excellent ✅"; }
+  else if (netMargin > 5)  { ptsNet = 18; levelNet = "Good 👍"; }
+  else if (netMargin > 0)  { ptsNet = 10; levelNet = "Acceptable ➡️"; }
+  else                      { ptsNet = 0;  levelNet = "Loss ⛔"; }
+
+  // Criterion 4: Consistency
+  const positiveYears = annees.filter(a => net(a) > 0).length;
+  let ptsConsistency, levelConsistency;
+  if      (positiveYears === annees.length)        { ptsConsistency = 25; levelConsistency = "Consistent ✅"; }
+  else if (positiveYears >= annees.length / 2)     { ptsConsistency = 12; levelConsistency = "Irregular ⚠️"; }
+  else                                              { ptsConsistency = 0;  levelConsistency = "Unstable ⛔"; }
+
+  const totalScore = ptsGrowth + ptsEBITDA + ptsNet + ptsConsistency;
+
+  // Valuation
+  let multLow, multHigh, profile;
+  if      (totalScore >= 75) { multLow = 6.0; multHigh = 8.0; profile = "Premium"; }
+  else if (totalScore >= 50) { multLow = 4.0; multHigh = 6.0; profile = "Standard"; }
+  else                        { multLow = 2.5; multHigh = 4.0; profile = "Discount"; }
+
+  const valLow    = ebitda(derniere) * multLow;
+  const valHigh   = ebitda(derniere) * multHigh;
+  const valCenter = (valLow + valHigh) / 2;
+
+  return {
+    annees, derniere, premiere,
+    ca, ebitda, net, index,
+    revenueGrowth, ebitdaMargin, netMargin, positiveYears,
+    totalScore, profile, multLow, multHigh,
+    valLow, valHigh, valCenter,
+    criteria: [
+      { name: "Revenue Growth",      value: `${revenueGrowth.toFixed(1)}%`, pts: ptsGrowth,       max: 25, level: levelGrowth },
+      { name: "EBITDA Margin",       value: `${ebitdaMargin.toFixed(1)}%`,  pts: ptsEBITDA,       max: 25, level: levelEBITDA },
+      { name: "Net Profitability",   value: `${netMargin.toFixed(1)}%`,      pts: ptsNet,          max: 25, level: levelNet },
+      { name: "Consistency (3 yrs)", value: `${positiveYears}/${annees.length} profitable yrs`, pts: ptsConsistency, max: 25, level: levelConsistency },
+    ]
+  };
+}
+
+// ── Display results ───────────────────────────────────────
+function fmt(v) {
+  return new Intl.NumberFormat('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 }).format(v);
+}
+
+function afficherResultats(data, nomFichier) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+
+  const { annees, derniere, premiere, ca, ebitda, net, index,
+          revenueGrowth, ebitdaMargin, netMargin,
+          totalScore, profile, multLow, multHigh,
+          valLow, valHigh, valCenter, criteria } = data;
+
+  // Banner
+  document.getElementById('res-nom').textContent  = nomFichier.replace(/\.[^.]+$/, '');
+  document.getElementById('res-meta').textContent = `Fiscal years ${annees.join(' · ')} · AI-powered analysis`;
+  document.getElementById('res-score').textContent = totalScore;
+
+  const scoreColor = totalScore >= 75 ? '#52b788' : totalScore >= 50 ? '#c8a84b' : '#e07a5f';
+  document.getElementById('res-score').style.color = scoreColor;
+
+  const profileLabels = { Premium: "🟢 Premium Profile", Standard: "🟡 Standard Profile", Discount: "🔴 Discount Profile" };
+  document.getElementById('res-qual').textContent = profileLabels[profile];
+
+  // KPIs
+  document.getElementById('kpi-ca').textContent = fmt(ca(derniere));
+  const trendCl = revenueGrowth >= 0 ? 'up' : 'dn';
+  document.getElementById('kpi-ca-trend').innerHTML =
+    `<span class="${trendCl}">${revenueGrowth >= 0 ? '▲' : '▼'} ${Math.abs(revenueGrowth).toFixed(1)}%</span> over ${annees.length} years`;
+
+  document.getElementById('kpi-ebitda').textContent = fmt(ebitda(derniere));
+  document.getElementById('kpi-ebitda-trend').innerHTML =
+    `<span class="${ebitdaMargin > 10 ? 'up' : 'dn'}">${ebitdaMargin.toFixed(1)}%</span> of revenue · ${derniere}`;
+
+  // Sparklines
+  function buildSparkline(cId, lId, vals, years) {
+    const maxV = Math.max(...vals);
+    const c = document.getElementById(cId), l = document.getElementById(lId);
+    c.innerHTML = ''; l.innerHTML = '';
+    vals.forEach((v, i) => {
+      const pct = maxV > 0 ? (v / maxV) * 100 : 0;
+      const bar = document.createElement('div');
+      bar.className = 'spark-bar' + (i === vals.length - 1 ? ' active' : '');
+      bar.style.height = '0px';
+      c.appendChild(bar);
+      setTimeout(() => { bar.style.height = pct + '%'; bar.style.transition = `height .8s cubic-bezier(.16,1,.3,1) ${i*.12}s`; }, 100);
+      const lbl = document.createElement('div');
+      lbl.className = 'spark-label'; lbl.textContent = years[i];
+      l.appendChild(lbl);
+    });
+  }
+  buildSparkline('spark-ca',     'spark-ca-labels',     annees.map(a => ca(a)),     annees);
+  buildSparkline('spark-ebitda', 'spark-ebitda-labels', annees.map(a => ebitda(a)), annees);
+
+  // Valuation
+  document.getElementById('val-bas').textContent    = fmt(valLow);
+  document.getElementById('val-haut').textContent   = fmt(valHigh);
+  document.getElementById('val-centre').textContent = `Estimated midpoint valuation: ${fmt(valCenter)}`;
+  document.getElementById('val-method').textContent =
+    `METHOD: ${multLow}× – ${multHigh}× EBITDA · ${profile.toUpperCase()} PROFILE · US SMB MARKET`;
+
+  // Score bars
+  const scoreDiv = document.getElementById('score-details');
+  scoreDiv.innerHTML = '';
+  criteria.forEach((c, i) => {
+    scoreDiv.innerHTML += `
+      <div class="score-row">
+        <div class="score-row-header">
+          <span class="score-row-label">${c.name}</span>
+          <span class="score-row-pts">${c.pts} / ${c.max}</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill" id="bar-${i}" style="width:0%"></div></div>
+        <div class="score-row-note">${c.value} · ${c.level}</div>
+      </div>`;
+  });
+  criteria.forEach((c, i) => {
+    setTimeout(() => {
+      const bar = document.getElementById(`bar-${i}`);
+      if (bar) bar.style.width = (c.pts / c.max * 100) + '%';
+    }, 200 + i * 150);
+  });
+
+  // Data table
+  const table = document.getElementById('data-table');
+  const postes = [
+    { label: "── REVENUE", section: true },
+    { label: "Total Revenue",  key: "chiffre" },
+    { label: "── EXPENSES", section: true },
+    { label: "Total Expenses", key: "total charges" },
+    { label: "── RESULTS", section: true },
+    { label: "Gross Margin",   key: "marge brute" },
+    { label: "EBITDA",         key: "ebitda" },
+    { label: "Net Income",     key: "résultat net", total: true },
+  ];
+  let html = '<thead><tr><th>Line Item</th>' + annees.map(a => `<th>${a}</th>`).join('') + '</tr></thead><tbody>';
+  postes.forEach(p => {
+    if (p.section) {
+      html += `<tr class="section"><td colspan="${annees.length + 1}">${p.label.replace('──','').trim()}</td></tr>`;
+      return;
+    }
+    const nomReel = Object.keys(index).find(k => k.toLowerCase().includes(p.key.toLowerCase()));
+    if (!nomReel) return;
+    html += `<tr${p.total ? ' class="total"' : ''}><td>${p.label}</td>` +
+      annees.map(a => { const v = index[nomReel][a]; return `<td>${v ? fmt(v) : '—'}</td>`; }).join('') + '</tr>';
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+
+  // Footer
+  document.getElementById('footer-fichier').textContent = `FILE: ${nomFichier.toUpperCase()}`;
+  document.getElementById('footer-date').textContent =
+    `GENERATED ${new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'}).toUpperCase()}`;
+}
+
+function resetApp() {
+  document.getElementById('results').style.display   = 'none';
+  document.getElementById('drop-zone').style.display = 'block';
+  document.getElementById('file-input').value        = '';
+}
+</script>
+</body>
+</html>

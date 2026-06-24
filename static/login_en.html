@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M&A Intelligence — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:    #0e0f11; --paper:  #f5f2ec; --cream:  #ede9e0;
+    --gold:   #c8a84b; --green:  #2a9d5c; --red:    #d64242;
+    --muted:  #6b6760; --border: #d4cfc5;
+    --font-d: 'DM Serif Display', serif;
+    --font-b: 'Manrope', sans-serif;
+    --font-m: 'DM Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--ink); color: var(--paper); font-family: var(--font-b); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+
+  .card { background: var(--paper); color: var(--ink); border-radius: 10px; width: 100%; max-width: 440px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.4); }
+
+  .card-header { background: var(--ink); padding: 28px 32px; text-align: center; }
+  .logo { font-family: var(--font-m); font-size: 13px; letter-spacing: .12em; background: var(--gold); color: var(--ink); padding: 4px 10px; border-radius: 2px; font-weight: 600; display: inline-block; margin-bottom: 14px; }
+  .card-title { font-family: var(--font-d); font-size: 24px; margin-bottom: 4px; }
+  .card-sub { font-family: var(--font-m); font-size: 11px; color: rgba(255,255,255,.4); letter-spacing: .07em; }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .tab { flex: 1; padding: 14px; text-align: center; font-family: var(--font-m); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; transition: all .2s; background: none; border-top: none; border-left: none; border-right: none; }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--ink); border-bottom-color: var(--ink); font-weight: 600; }
+
+  .card-body { padding: 28px 32px; }
+
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-family: var(--font-m); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .form-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-b); font-size: 14px; background: var(--paper); color: var(--ink); outline: none; transition: border-color .2s; }
+  .form-input:focus { border-color: var(--ink); }
+  .form-input::placeholder { color: var(--muted); opacity: .6; }
+
+  .role-select { display: flex; gap: 8px; margin-bottom: 18px; }
+  .role-btn { flex: 1; padding: 10px 8px; border: 1px solid var(--border); border-radius: 4px; text-align: center; cursor: pointer; transition: all .2s; background: var(--paper); }
+  .role-btn:hover { border-color: var(--ink); }
+  .role-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .role-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+  .role-label { font-family: var(--font-m); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+
+  .btn-primary { width: 100%; padding: 12px; background: var(--ink); color: var(--paper); border: none; border-radius: 4px; font-family: var(--font-m); font-size: 12px; letter-spacing: .09em; font-weight: 600; cursor: pointer; transition: opacity .2s; text-transform: uppercase; }
+  .btn-primary:hover { opacity: .85; }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+  .status-msg { padding: 10px 12px; border-radius: 4px; margin-bottom: 16px; font-size: 13px; display: none; }
+  .status-msg.succes { background: #e8f7ef; color: #1a5c38; border: 1px solid #a8d5b8; }
+  .status-msg.erreur { background: #fdeaea; color: #7b1d1d; border: 1px solid #f5b8b8; }
+
+  .separateur { text-align: center; margin: 20px 0; position: relative; }
+  .separateur::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--border); }
+  .separateur span { background: var(--paper); padding: 0 12px; font-family: var(--font-m); font-size: 10px; color: var(--muted); letter-spacing: .06em; position: relative; }
+
+  .password-strength { height: 3px; border-radius: 10px; margin-top: 6px; background: var(--border); overflow: hidden; }
+  .password-strength-fill { height: 100%; border-radius: 10px; width: 0; transition: width .3s, background .3s; }
+
+  .card-footer { padding: 16px 32px; background: var(--cream); text-align: center; border-top: 1px solid var(--border); }
+  .card-footer p { font-family: var(--font-m); font-size: 10px; color: var(--muted); letter-spacing: .05em; line-height: 1.6; }
+
+  .inscription-only { display: none; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <div class="card-header">
+    <span class="logo">M&A·AI</span>
+    <div class="card-title">M&A Intelligence Platform</div>
+    <div class="card-sub">AI-Powered SME Acquisition Marketplace · Secure Access</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('login')">Sign In</button>
+    <button class="tab"        onclick="switchTab('register')">Create Account</button>
+  </div>
+
+  <div class="card-body">
+    <div class="status-msg" id="status-msg"></div>
+
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input class="form-input" type="email" id="email" placeholder="you@company.com" autocomplete="email">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" type="password" id="password" placeholder="••••••••" autocomplete="current-password" oninput="evalStrength(this.value)">
+      <div class="password-strength"><div class="password-strength-fill" id="pwd-strength"></div></div>
+    </div>
+
+    <!-- Registration fields -->
+    <div class="inscription-only" id="register-fields">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">First Name</label>
+          <input class="form-input" type="text" id="firstname" placeholder="John">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Last Name</label>
+          <input class="form-input" type="text" id="lastname" placeholder="Smith">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Company (optional)</label>
+        <input class="form-input" type="text" id="company" placeholder="Your company name">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">I am a…</label>
+        <div class="role-select">
+          <div class="role-btn active" onclick="selectRole('buyer', this)">
+            <span class="role-icon">🔍</span>
+            <span class="role-label">Buyer</span>
+          </div>
+          <div class="role-btn" onclick="selectRole('seller', this)">
+            <span class="role-icon">🏢</span>
+            <span class="role-label">Seller</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="buyer-prefs">
+        <div class="form-group">
+          <label class="form-label">Maximum Acquisition Budget ($)</label>
+          <input class="form-input" type="number" id="budget" placeholder="500000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Minimum Health Score (0–100)</label>
+          <input class="form-input" type="number" id="min-score" placeholder="70" min="0" max="100">
+        </div>
+      </div>
+
+    </div>
+
+    <button class="btn-primary" id="btn-action" onclick="submit()">Sign In →</button>
+
+    <div class="separateur"><span>or</span></div>
+
+    <button class="btn-primary"
+            style="background:transparent;color:var(--ink);border:1px solid var(--border)"
+            onclick="demoAccess()">
+      Demo Access (no account needed)
+    </button>
+  </div>
+
+  <div class="card-footer">
+    <p>Your data is encrypted and never shared with third parties.<br>
+    GDPR compliant · European hosting · SOC 2 ready</p>
+  </div>
+
+</div>
+
+<script>
+let currentMode = 'login';
+let selectedRole = 'buyer';
+
+function switchTab(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && mode === 'login') || (i === 1 && mode === 'register'));
+  });
+  document.getElementById('register-fields').style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('btn-action').textContent = mode === 'login' ? 'Sign In →' : 'Create Account →';
+  hideMessage();
+}
+
+function selectRole(role, btn) {
+  selectedRole = role;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('buyer-prefs').style.display = role === 'buyer' ? 'block' : 'none';
+}
+
+function evalStrength(pwd) {
+  const bar = document.getElementById('pwd-strength');
+  let strength = 0;
+  if (pwd.length >= 8)          strength += 25;
+  if (/[A-Z]/.test(pwd))        strength += 25;
+  if (/[0-9]/.test(pwd))        strength += 25;
+  if (/[^A-Za-z0-9]/.test(pwd)) strength += 25;
+  bar.style.width      = strength + '%';
+  bar.style.background = strength <= 25 ? '#d64242' : strength <= 50 ? '#c8a84b' : strength <= 75 ? '#f59e0b' : '#2a9d5c';
+}
+
+async function submit() {
+  const email = document.getElementById('email').value.trim();
+  const pwd   = document.getElementById('password').value;
+  if (!email || !pwd) { showMessage('Please fill in all required fields.', 'erreur'); return; }
+  const btn = document.getElementById('btn-action');
+  btn.disabled = true; btn.textContent = 'Loading…';
+  try {
+    if (currentMode === 'login') await signIn(email, pwd);
+    else await signUp(email, pwd);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = currentMode === 'login' ? 'Sign In →' : 'Create Account →';
+  }
+}
+
+async function signIn(email, pwd) {
+  try {
+    const res  = await fetch('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, mot_de_passe: pwd }) });
+    const data = await res.json();
+    if (!res.ok) { showMessage(data.erreur || 'Sign in failed.', 'erreur'); return; }
+    localStorage.setItem('ma_token',       data.token);
+    localStorage.setItem('ma_utilisateur', JSON.stringify(data.utilisateur));
+    showMessage(`Welcome back, ${data.utilisateur.prenom}! Redirecting…`, 'succes');
+    setTimeout(() => {
+      window.location.href = data.utilisateur.role === 'vendeur'
+        ? '/static/dashboard_en.html'
+        : '/static/marketplace_en.html';
+    }, 1200);
+  } catch { showMessage('Server unavailable. Run: python app.py', 'erreur'); }
+}
+
+async function signUp(email, pwd) {
+  const firstname = document.getElementById('firstname').value.trim();
+  const lastname  = document.getElementById('lastname').value.trim();
+  const company   = document.getElementById('company').value.trim();
+  const budget    = parseInt(document.getElementById('budget').value) || 0;
+  const minScore  = parseInt(document.getElementById('min-score').value) || 50;
+  if (!firstname || !lastname) { showMessage('First and last name are required.', 'erreur'); return; }
+  if (pwd.length < 8)          { showMessage('Password must be at least 8 characters.', 'erreur'); return; }
+  try {
+    const res  = await fetch('/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, mot_de_passe: pwd, prenom: firstname, nom: lastname, entreprise: company, role: selectedRole === 'buyer' ? 'acheteur' : 'vendeur', budget_max: budget, score_min: minScore, secteurs_cibles: [] }) });
+    const data = await res.json();
+    if (!res.ok) { showMessage(data.erreur || 'Registration failed.', 'erreur'); return; }
+    showMessage('Account created! Please sign in.', 'succes');
+    setTimeout(() => switchTab('login'), 1500);
+  } catch { showMessage('Server unavailable. Run: python app.py', 'erreur'); }
+}
+
+function demoAccess() {
+  localStorage.setItem('ma_token', 'demo-token');
+  localStorage.setItem('ma_utilisateur', JSON.stringify({ id:'demo', prenom:'Demo', nom:'User', email:'demo@ma-ai.com', role:'acheteur', entreprise:'Demo Mode' }));
+  showMessage('Demo access activated. Redirecting…', 'succes');
+  setTimeout(() => window.location.href = '/static/marketplace_en.html', 1000);
+}
+
+function showMessage(text, type) {
+  const el = document.getElementById('status-msg');
+  el.textContent = text; el.className = `status-msg ${type}`; el.style.display = 'block';
+}
+function hideMessage() { document.getElementById('status-msg').style.display = 'none'; }
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M&A Intelligence — Live Market Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #0e0f11; --paper:  #f5f2ec; --cream:  #ede9e0;
+  --border: #d4cfc5; --muted:  #6b6760; --gold:   #c8a84b;
+  --gold2:  #e8c96b; --green:  #2a9d5c; --green-bg: #e8f7ef;
+  --red:    #d64242; --red-bg: #fdeaea; --white:  #ffffff;
+  --t-bg:   #0b0d10; --t-green: #00e676; --t-dim: #3a4250;
+  --font-d: 'DM Serif Display', serif;
+  --font-b: 'Manrope', sans-serif;
+  --font-m: 'DM Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--ink); color: var(--paper); font-family: var(--font-b); line-height: 1.5; overflow-x: hidden; }
+
+/* Topbar */
+.topbar { background: #070809; border-bottom: 1px solid #1e2228; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.logo { font-family: var(--font-m); font-size: 12px; letter-spacing: .12em; background: var(--gold); color: var(--ink); padding: 3px 9px; border-radius: 2px; font-weight: 600; }
+.nav-links { display: flex; gap: 2px; }
+.nav-link { font-family: var(--font-m); font-size: 11px; letter-spacing: .07em; color: rgba(255,255,255,.3); padding: 5px 12px; border-radius: 3px; cursor: pointer; text-decoration: none; transition: all .15s; }
+.nav-link:hover, .nav-link.active { background: rgba(255,255,255,.06); color: rgba(255,255,255,.85); }
+
+/* Live bar */
+.live-bar { background: #070809; border-bottom: 1px solid #1e2228; padding: 7px 24px; display: flex; align-items: center; gap: 24px; overflow-x: auto; }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--t-green); animation: pulse 1.6s ease-in-out infinite; flex-shrink: 0; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+.live-time { font-family: var(--font-m); font-size: 11px; color: rgba(255,255,255,.4); letter-spacing: .08em; flex-shrink: 0; }
+.ticker-strip { display: flex; gap: 28px; align-items: center; }
+.ticker-item { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.ticker-name { font-family: var(--font-m); font-size: 11px; color: rgba(255,255,255,.5); letter-spacing: .06em; }
+.ticker-val  { font-family: var(--font-m); font-size: 12px; font-weight: 600; }
+.ticker-delta { font-family: var(--font-m); font-size: 10px; padding: 1px 5px; border-radius: 3px; }
+.up   { color: var(--t-green); }
+.dn   { color: var(--red); }
+.up-bg { background: rgba(0,230,118,.12); color: var(--t-green); }
+.dn-bg { background: rgba(214,66,66,.12); color: var(--red); }
+
+/* Layout */
+.layout { display: grid; grid-template-columns: 1fr 320px; height: calc(100vh - 84px); }
+
+/* Main column */
+.col-main { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+/* Panels */
+.panel { background: #111318; border: 1px solid #1e2228; border-radius: 6px; overflow: hidden; }
+.panel-header { padding: 12px 16px; border-bottom: 1px solid #1e2228; display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-family: var(--font-m); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.4); }
+.panel-badge { font-family: var(--font-m); font-size: 10px; letter-spacing: .08em; padding: 2px 8px; border-radius: 10px; background: rgba(0,230,118,.1); color: var(--t-green); }
+
+/* Indices */
+.indices-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #1e2228; border-radius: 6px; overflow: hidden; border: 1px solid #1e2228; }
+.indice-cell { background: #111318; padding: 14px 16px; }
+.indice-label { font-family: var(--font-m); font-size: 9px; letter-spacing: .1em; color: rgba(255,255,255,.3); text-transform: uppercase; margin-bottom: 6px; }
+.indice-val { font-family: var(--font-d); font-size: 20px; color: rgba(255,255,255,.9); }
+.indice-delta { font-family: var(--font-m); font-size: 11px; margin-top: 3px; }
+
+/* Cotation table */
+.cote-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cote-table th { font-family: var(--font-m); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.25); padding: 8px 12px; text-align: right; border-bottom: 1px solid #1e2228; }
+.cote-table th:first-child { text-align: left; }
+.cote-table td { padding: 10px 12px; border-bottom: 1px solid #15181e; text-align: right; font-family: var(--font-m); font-size: 12px; vertical-align: middle; }
+.cote-table td:first-child { text-align: left; }
+.cote-table tr { transition: background .15s; cursor: pointer; }
+.cote-table tr:hover { background: rgba(255,255,255,.025); }
+.cote-table tr.selected { background: rgba(200,168,75,.07); }
+.cie-name { font-family: var(--font-b); font-size: 13px; font-weight: 600; color: rgba(255,255,255,.9); }
+.cie-sector { font-family: var(--font-m); font-size: 10px; color: rgba(255,255,255,.3); margin-top: 1px; }
+.score-chip { display: inline-block; font-family: var(--font-m); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 3px; }
+.sc-p { background: rgba(42,157,92,.15); color: #4ade80; }
+.sc-s { background: rgba(192,122,26,.15); color: #fbbf24; }
+.sc-d { background: rgba(214,66,66,.15); color: #f87171; }
+.flash { animation: flash-anim .5s ease; }
+@keyframes flash-anim { 0%{background:rgba(0,230,118,.18)} 100%{background:transparent} }
+.mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 24px; }
+.mini-bar { width: 4px; border-radius: 1px 1px 0 0; transition: height .4s; }
+
+/* Chart */
+.chart-area { padding: 16px; }
+svg.sparkline { width: 100%; height: 80px; }
+
+/* Right column */
+.col-side { background: #0d0f12; border-left: 1px solid #1e2228; overflow-y: auto; display: flex; flex-direction: column; }
+
+/* Detail panel */
+.detail-panel { padding: 16px; border-bottom: 1px solid #1e2228; }
+.detail-cie { font-family: var(--font-d); font-size: 18px; color: rgba(255,255,255,.9); margin-bottom: 2px; }
+.detail-meta { font-family: var(--font-m); font-size: 10px; color: rgba(255,255,255,.3); letter-spacing: .06em; }
+.detail-score { font-family: var(--font-d); font-size: 42px; line-height: 1; margin: 12px 0 4px; }
+.detail-qual { font-family: var(--font-m); font-size: 11px; letter-spacing: .08em; }
+.detail-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #1e2228; margin: 12px 0; border-radius: 4px; overflow: hidden; }
+.detail-kpi { background: #111318; padding: 10px 12px; }
+.detail-kpi-val { font-family: var(--font-m); font-size: 13px; font-weight: 600; }
+.detail-kpi-lbl { font-family: var(--font-m); font-size: 9px; color: rgba(255,255,255,.3); letter-spacing: .08em; text-transform: uppercase; margin-top: 2px; }
+.val-range { font-family: var(--font-d); font-size: 16px; color: var(--gold); margin-top: 8px; }
+.val-range-lbl { font-family: var(--font-m); font-size: 9px; color: rgba(255,255,255,.3); letter-spacing: .08em; text-transform: uppercase; margin-top: 2px; }
+
+/* Criteria bars */
+.crit-row { margin-bottom: 10px; }
+.crit-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.crit-name { font-family: var(--font-m); font-size: 10px; color: rgba(255,255,255,.5); }
+.crit-pts  { font-family: var(--font-m); font-size: 10px; color: rgba(255,255,255,.3); }
+.crit-track { height: 3px; background: #1e2228; border-radius: 10px; overflow: hidden; }
+.crit-fill  { height: 100%; border-radius: 10px; background: var(--gold); transition: width 1s cubic-bezier(.16,1,.3,1); }
+
+/* Alerts */
+.alerts-panel { flex: 1; padding: 16px; }
+.alerts-title { font-family: var(--font-m); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.3); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.alert-badge { background: var(--red); color: white; font-size: 9px; padding: 1px 5px; border-radius: 10px; }
+.alert-item { background: #111318; border: 1px solid #1e2228; border-radius: 4px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s; }
+.alert-item:hover { border-color: #2e3340; }
+.alert-item.new  { border-left: 2px solid var(--t-green); }
+.alert-item.warn { border-left: 2px solid var(--gold); }
+.alert-item.info { border-left: 2px solid rgba(255,255,255,.2); }
+.alert-time { font-family: var(--font-m); font-size: 9px; color: rgba(255,255,255,.25); letter-spacing: .06em; margin-bottom: 3px; }
+.alert-text { font-family: var(--font-b); font-size: 12px; color: rgba(255,255,255,.75); line-height: 1.4; }
+.alert-tag  { font-family: var(--font-m); font-size: 9px; margin-top: 4px; }
+
+/* Buttons */
+.action-btn { margin: 0 16px 16px; padding: 10px; background: linear-gradient(135deg, #c8a84b, #e8c96b); color: var(--ink); border: none; border-radius: 4px; font-family: var(--font-m); font-size: 11px; letter-spacing: .08em; font-weight: 600; cursor: pointer; width: calc(100% - 32px); transition: opacity .15s; }
+.action-btn:hover { opacity: .88; }
+
+/* Alert config */
+.alert-config { background: #111318; border: 1px solid #1e2228; border-radius: 4px; padding: 12px; margin: 0 16px 16px; }
+.alert-config-title { font-family: var(--font-m); font-size: 10px; letter-spacing: .08em; color: rgba(255,255,255,.35); text-transform: uppercase; margin-bottom: 10px; }
+.alert-config label { display: block; font-family: var(--font-m); font-size: 10px; color: rgba(255,255,255,.4); margin-bottom: 4px; }
+.alert-config input, .alert-config select { width: 100%; background: #0b0d10; border: 1px solid #2a2e38; border-radius: 3px; color: rgba(255,255,255,.7); font-family: var(--font-m); font-size: 11px; padding: 6px 8px; outline: none; margin-bottom: 8px; }
+.alert-config input:focus, .alert-config select:focus { border-color: var(--gold); }
+.set-alert-btn { width: 100%; padding: 7px; background: rgba(200,168,75,.15); border: 1px solid var(--gold); border-radius: 3px; color: var(--gold); font-family: var(--font-m); font-size: 10px; letter-spacing: .08em; cursor: pointer; transition: background .15s; }
+.set-alert-btn:hover { background: rgba(200,168,75,.25); }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-left">
+    <span class="logo">M&A·AI</span>
+    <div class="nav-links">
+      <a class="nav-link" href="dashboard_en.html">Analyze P&L</a>
+      <a class="nav-link" href="marketplace_en.html">Marketplace</a>
+      <a class="nav-link active">Live Terminal</a>
+    </div>
+  </div>
+  <span style="font-family:var(--font-m);font-size:10px;color:rgba(255,255,255,.25);letter-spacing:.08em">PHASE 4 · LIVE</span>
+</nav>
+
+<!-- Live ticker bar -->
+<div class="live-bar">
+  <div class="live-dot"></div>
+  <div class="live-time" id="clock">--:--:--</div>
+  <div class="ticker-strip" id="ticker-strip"></div>
+</div>
+
+<div class="layout">
+
+  <!-- Main column -->
+  <div class="col-main">
+
+    <!-- Market indices -->
+    <div class="indices-grid">
+      <div class="indice-cell">
+        <div class="indice-label">Avg. Market Score</div>
+        <div class="indice-val" id="idx-score">—</div>
+        <div class="indice-delta up" id="idx-score-d">—</div>
+      </div>
+      <div class="indice-cell">
+        <div class="indice-label">Total Market Value</div>
+        <div class="indice-val" id="idx-valo">—</div>
+        <div class="indice-delta" id="idx-valo-d">—</div>
+      </div>
+      <div class="indice-cell">
+        <div class="indice-label">Premium Listings</div>
+        <div class="indice-val" id="idx-premium">—</div>
+        <div class="indice-delta up" id="idx-premium-d">—</div>
+      </div>
+      <div class="indice-cell">
+        <div class="indice-label">Active Alerts</div>
+        <div class="indice-val" id="idx-alertes">—</div>
+        <div class="indice-delta" id="idx-alertes-d">—</div>
+      </div>
+    </div>
+
+    <!-- Scoring board -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Business Scoring Board</span>
+        <span class="panel-badge">● LIVE</span>
+      </div>
+      <table class="cote-table">
+        <thead>
+          <tr>
+            <th>Business</th>
+            <th>Score</th>
+            <th>Change</th>
+            <th>Revenue</th>
+            <th>EBITDA</th>
+            <th>Valuation</th>
+            <th>Trend</th>
+          </tr>
+        </thead>
+        <tbody id="cote-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Trend chart -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" id="chart-title">Score Trend — select a business</span>
+        <span class="panel-badge" id="chart-score">—</span>
+      </div>
+      <div class="chart-area">
+        <svg class="sparkline" id="main-chart" viewBox="0 0 600 80" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right column -->
+  <div class="col-side">
+
+    <!-- Detail card -->
+    <div class="detail-panel">
+      <div class="detail-cie" id="d-nom">Select a business</div>
+      <div class="detail-meta" id="d-meta">Click any row in the table</div>
+      <div class="detail-score" id="d-score" style="color:var(--gold)">—</div>
+      <div class="detail-qual" id="d-qual" style="color:rgba(255,255,255,.4)">—</div>
+      <div class="detail-kpis" id="d-kpis">
+        <div class="detail-kpi"><div class="detail-kpi-val">—</div><div class="detail-kpi-lbl">Revenue</div></div>
+        <div class="detail-kpi"><div class="detail-kpi-val">—</div><div class="detail-kpi-lbl">EBITDA</div></div>
+        <div class="detail-kpi"><div class="detail-kpi-val">—</div><div class="detail-kpi-lbl">Net Margin</div></div>
+        <div class="detail-kpi"><div class="detail-kpi-val">—</div><div class="detail-kpi-lbl">Rev. Growth</div></div>
+      </div>
+      <div class="val-range" id="d-val">—</div>
+      <div class="val-range-lbl">Estimated Valuation Range</div>
+      <div style="margin-top:14px" id="d-criteres"></div>
+    </div>
+
+    <button class="action-btn" onclick="alert('Secure buyer-seller messaging — Phase 5: authentication & encrypted chat')">
+      Contact the Seller →
+    </button>
+
+    <!-- Alert configurator -->
+    <div class="alert-config">
+      <div class="alert-config-title">Set up an Alert</div>
+      <label>Alert Type</label>
+      <select id="alert-type">
+        <option>Score ≥ threshold</option>
+        <option>New listing — sector</option>
+        <option>Score change > 5pts</option>
+        <option>Valuation ≤ budget</option>
+      </select>
+      <label>Trigger Value</label>
+      <input type="text" id="alert-val" placeholder="e.g. 75, Tech, or $500,000">
+      <button class="set-alert-btn" onclick="addAlert()">+ Create Alert</button>
+    </div>
+
+    <!-- Alert feed -->
+    <div class="alerts-panel">
+      <div class="alerts-title">
+        Alert Feed
+        <span class="alert-badge" id="alert-count">3</span>
+      </div>
+      <div id="alerts-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Market data (USD) ─────────────────────────────────────
+const MARKET = [
+  { id:1, nom:"TechDistrib LLC",      sector:"Distribution",   status:"for sale",   score:100, ca:1_705_000, ebitda:507_000, netMargin:20.7, growth:29.2, valLow:3_042_000, valHigh:4_056_000, profile:"Premium",
+    history:[82,85,87,89,91,90,93,95,94,96,97,96,98,99,100,100,99,100,100,100] },
+  { id:2, nom:"AlphaLogix Inc.",       sector:"B2B SaaS",       status:"opportunity",score:93,  ca:715_000,   ebitda:200_200, netMargin:19.1, growth:38.3, valLow:1_201_200, valHigh:1_601_600, profile:"Premium",
+    history:[70,72,74,76,78,79,81,83,84,85,86,87,88,89,90,91,91,92,93,93] },
+  { id:3, nom:"MedTech Devices Corp.", sector:"Medical",        status:"opportunity",score:88,  ca:979_000,   ebitda:205_590, netMargin:15.3, growth:22.0, valLow:1_233_540, valHigh:1_644_720, profile:"Premium",
+    history:[75,76,77,78,79,80,81,82,83,84,84,85,86,86,87,87,88,88,88,88] },
+  { id:4, nom:"BioClean Solutions",    sector:"Environmental",  status:"for sale",   score:78,  ca:1_078_000, ebitda:215_600, netMargin:13.0, growth:14.6, valLow:1_293_600, valHigh:1_724_800, profile:"Premium",
+    history:[68,69,70,71,72,72,73,73,74,74,75,75,76,76,77,77,77,78,78,78] },
+  { id:5, nom:"Duval Woodworks LLC",   sector:"Manufacturing",  status:"for sale",   score:56,  ca:1_320_000, ebitda:158_400, netMargin:7.0,  growth:5.2,  valLow:633_600,   valHigh:950_400,   profile:"Standard",
+    history:[52,53,52,54,53,55,54,55,55,56,55,56,56,56,57,56,57,56,56,56] },
+  { id:6, nom:"Central Print Group",   sector:"Manufacturing",  status:"for sale",   score:51,  ca:2_310_000, ebitda:277_200, netMargin:7.0,  growth:2.8,  valLow:1_108_800, valHigh:1_663_200, profile:"Standard",
+    history:[50,50,51,50,51,51,52,51,52,51,51,52,51,51,52,51,52,51,51,51] },
+  { id:7, nom:"CoachDev Training Co.", sector:"Training",       status:"for sale",   score:43,  ca:462_000,   ebitda:69_300,  netMargin:9.0,  growth:-3.1, valLow:173_250,   valHigh:277_200,   profile:"Discount",
+    history:[48,47,47,46,46,46,45,45,45,44,44,44,44,43,43,43,43,43,43,43] },
+  { id:8, nom:"Maison Leroux Gourmet", sector:"Retail",         status:"for sale",   score:31,  ca:418_000,   ebitda:37_400,  netMargin:3.7,  growth:8.5,  valLow:93_500,    valHigh:149_600,   profile:"Discount",
+    history:[33,33,32,32,32,31,31,32,31,31,31,30,31,31,31,31,31,31,31,31] },
+];
+
+let scoresLive = MARKET.map(e => ({ ...e, scoreLive: e.score, delta: 0 }));
+let selectedId = null;
+
+// ── Clock ─────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── Live score fluctuation ────────────────────────────────
+function fluctuate() {
+  scoresLive = scoresLive.map(e => {
+    const variation = (Math.random() - 0.5) * 1.4;
+    const newScore  = Math.max(0, Math.min(100, e.scoreLive + variation));
+    return { ...e, scoreLive: parseFloat(newScore.toFixed(1)), delta: newScore - e.scoreLive };
+  });
+  renderTable();
+  updateIndices();
+  if (selectedId) showDetail(selectedId);
+}
+setInterval(fluctuate, 3000);
+
+// ── Ticker ────────────────────────────────────────────────
+function renderTicker() {
+  document.getElementById('ticker-strip').innerHTML = scoresLive.map(e => {
+    const cl    = e.delta >= 0 ? 'up' : 'dn';
+    const arrow = e.delta >= 0 ? '▲' : '▼';
+    return `<div class="ticker-item">
+      <span class="ticker-name">${e.nom.split(' ')[0].toUpperCase()}</span>
+      <span class="ticker-val ${cl}">${e.scoreLive.toFixed(1)}</span>
+      <span class="ticker-delta ${e.delta >= 0 ? 'up-bg' : 'dn-bg'}">${arrow}${Math.abs(e.delta).toFixed(1)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Indices ───────────────────────────────────────────────
+function updateIndices() {
+  const avgScore   = scoresLive.reduce((s,e) => s + e.scoreLive, 0) / scoresLive.length;
+  const totalValo  = scoresLive.reduce((s,e) => s + (e.valLow + e.valHigh) / 2, 0);
+  const premium    = scoresLive.filter(e => e.profile === 'Premium').length;
+
+  document.getElementById('idx-score').textContent   = avgScore.toFixed(1);
+  document.getElementById('idx-score-d').textContent = '▲ +2.3 pts (30d)';
+  document.getElementById('idx-valo').textContent    = fmt(totalValo);
+  document.getElementById('idx-valo-d').textContent  = '▲ +8.4%';
+  document.getElementById('idx-premium').textContent = premium;
+  document.getElementById('idx-premium-d').textContent = '= stable';
+  document.getElementById('idx-alertes').textContent = alertsData.length;
+  document.getElementById('idx-alertes-d').textContent = alertsData.filter(a => a.type === 'new').length + ' new';
+}
+
+// ── Mini sparkline bars ───────────────────────────────────
+function miniSparkline(history) {
+  const max = Math.max(...history), min = Math.min(...history);
+  return history.map((v, i) => {
+    const h   = max === min ? 50 : ((v - min) / (max - min)) * 22 + 2;
+    const col = i === history.length - 1 ? '#c8a84b' : (v >= history[0] ? '#2a9d5c' : '#d64242');
+    return `<div class="mini-bar" style="height:${h}px;background:${col}"></div>`;
+  }).join('');
+}
+
+// ── Scoring board table ───────────────────────────────────
+function classProfil(p) {
+  return p === 'Premium' ? 'sc-p' : p === 'Standard' ? 'sc-s' : 'sc-d';
+}
+
+function renderTable() {
+  document.getElementById('cote-body').innerHTML = scoresLive.map(e => {
+    const sign    = e.delta >= 0 ? '+' : '';
+    const cl      = e.delta >= 0 ? 'up' : 'dn';
+    const selCl   = e.id === selectedId ? ' selected' : '';
+    const flashCl = Math.abs(e.delta) > 0.5 ? ' flash' : '';
+    return `<tr class="${selCl}${flashCl}" onclick="showDetail(${e.id})">
+      <td>
+        <div class="cie-name">${e.nom}</div>
+        <div class="cie-sector">${e.sector} · ${e.status === 'for sale' ? 'FOR SALE' : 'OPPORTUNITY'}</div>
+      </td>
+      <td><span class="score-chip ${classProfil(e.profile)}">${e.scoreLive.toFixed(1)}</span></td>
+      <td class="${cl}">${sign}${e.delta.toFixed(2)}</td>
+      <td>${fmt(e.ca)}</td>
+      <td>${fmt(e.ebitda)}</td>
+      <td>${fmt((e.valLow + e.valHigh) / 2)}</td>
+      <td><div class="mini-chart">${miniSparkline(e.history)}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── SVG trend chart ───────────────────────────────────────
+function drawChart(history, svgId) {
+  const svg = document.getElementById(svgId);
+  const W = 600, H = 80, p = 10;
+  const max = Math.max(...history) + 2, min = Math.min(...history) - 2;
+  const pts = history.map((v, i) => {
+    const x = p + (i / (history.length - 1)) * (W - 2*p);
+    const y = H - p - ((v - min) / (max - min)) * (H - 2*p);
+    return `${x},${y}`;
+  });
+  const area = `M${pts[0]} ` + pts.slice(1).map(p => `L${p}`).join(' ') + ` L${W-p},${H} L${p},${H} Z`;
+  const line = `M${pts[0]} ` + pts.slice(1).map(p => `L${p}`).join(' ');
+  svg.innerHTML = `
+    <defs><linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#c8a84b" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#c8a84b" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${area}" fill="url(#grad)"/>
+    <path d="${line}" fill="none" stroke="#c8a84b" stroke-width="1.5" stroke-linejoin="round"/>
+    <circle cx="${pts[pts.length-1].split(',')[0]}" cy="${pts[pts.length-1].split(',')[1]}" r="3" fill="#c8a84b"/>`;
+}
+
+// ── Detail panel ──────────────────────────────────────────
+function showDetail(id) {
+  selectedId = id;
+  const e    = scoresLive.find(x => x.id === id);
+  if (!e) return;
+
+  document.querySelectorAll('#cote-body tr').forEach((tr, i) => {
+    tr.classList.toggle('selected', scoresLive[i]?.id === id);
+  });
+
+  document.getElementById('d-nom').textContent   = e.nom;
+  document.getElementById('d-meta').textContent  = `${e.sector} · ${e.profile} · ${e.status === 'for sale' ? 'For Sale' : 'Opportunity'}`;
+  document.getElementById('d-score').textContent = e.scoreLive.toFixed(1);
+  document.getElementById('d-score').style.color = e.profile === 'Premium' ? '#4ade80' : e.profile === 'Standard' ? '#fbbf24' : '#f87171';
+  document.getElementById('d-qual').textContent  = e.profile === 'Premium' ? '🟢 Premium Profile' : e.profile === 'Standard' ? '🟡 Standard Profile' : '🔴 Discount Profile';
+
+  document.getElementById('d-kpis').innerHTML = `
+    <div class="detail-kpi"><div class="detail-kpi-val">${fmt(e.ca)}</div><div class="detail-kpi-lbl">Revenue</div></div>
+    <div class="detail-kpi"><div class="detail-kpi-val">${fmt(e.ebitda)}</div><div class="detail-kpi-lbl">EBITDA</div></div>
+    <div class="detail-kpi"><div class="detail-kpi-val">${e.netMargin.toFixed(1)}%</div><div class="detail-kpi-lbl">Net Margin</div></div>
+    <div class="detail-kpi"><div class="detail-kpi-val">${e.growth > 0 ? '+' : ''}${e.growth.toFixed(1)}%</div><div class="detail-kpi-lbl">Rev. Growth</div></div>`;
+
+  document.getElementById('d-val').textContent = `${fmt(e.valLow)} – ${fmt(e.valHigh)}`;
+
+  // Criteria bars
+  const criteria = [
+    { name:"Revenue Growth",    pts: e.growth > 20 ? 25 : e.growth > 10 ? 15 : e.growth > 0 ? 8 : 0 },
+    { name:"EBITDA Margin",     pts: (e.ebitda/e.ca*100) > 20 ? 25 : 18 },
+    { name:"Net Profitability", pts: e.netMargin > 10 ? 25 : e.netMargin > 5 ? 18 : 10 },
+    { name:"Consistency",       pts: Math.max(0, Math.round(e.scoreLive) - (e.growth > 20 ? 25 : 15) - 18 - (e.netMargin > 10 ? 25 : 18)) },
+  ];
+  document.getElementById('d-criteres').innerHTML = criteria.map(c => `
+    <div class="crit-row">
+      <div class="crit-header"><span class="crit-name">${c.name}</span><span class="crit-pts">${Math.max(0,c.pts)}/25</span></div>
+      <div class="crit-track"><div class="crit-fill" style="width:${Math.max(0,c.pts)/25*100}%"></div></div>
+    </div>`).join('');
+
+  document.getElementById('chart-title').textContent = `Score Trend — ${e.nom}`;
+  document.getElementById('chart-score').textContent = `${e.scoreLive.toFixed(1)} / 100`;
+  drawChart(e.history, 'main-chart');
+}
+
+// ── Alerts feed ───────────────────────────────────────────
+let alertsData = [
+  { type:'new',  time:'2 min ago',  text:'AlphaLogix Inc.: score crossed 93 pts — alert threshold reached',   tag:'🟢 Score ≥ 90' },
+  { type:'warn', time:'11 min ago', text:'CoachDev Training Co.: score declining (−5 pts / 30d)',               tag:'🟡 Negative trend' },
+  { type:'info', time:'38 min ago', text:'New listing added in B2B SaaS sector — Boston, MA',                  tag:'ℹ️ New listing' },
+];
+
+function renderAlerts() {
+  document.getElementById('alerts-list').innerHTML = alertsData.map(a => `
+    <div class="alert-item ${a.type}">
+      <div class="alert-time">${a.time}</div>
+      <div class="alert-text">${a.text}</div>
+      <div class="alert-tag">${a.tag}</div>
+    </div>`).join('');
+  document.getElementById('alert-count').textContent = alertsData.length;
+}
+
+function addAlert() {
+  const type = document.getElementById('alert-type').value;
+  const val  = document.getElementById('alert-val').value;
+  if (!val.trim()) return;
+  alertsData.unshift({ type:'new', time:'just now', text:`Alert set: ${type} → ${val}`, tag:'🔔 New alert' });
+  document.getElementById('alert-val').value = '';
+  renderAlerts();
+}
+
+// ── Formatter ─────────────────────────────────────────────
+function fmt(v) {
+  if (v >= 1_000_000) return '$' + (v / 1_000_000).toFixed(2) + 'M';
+  if (v >= 1_000)     return '$' + (v / 1_000).toFixed(0) + 'K';
+  return '$' + v;
+}
+
+// ── Init ──────────────────────────────────────────────────
+renderTable();
+renderTicker();
+updateIndices();
+renderAlerts();
+setInterval(renderTicker, 3000);
+showDetail(1);
+</script>
+</body>
+</html>

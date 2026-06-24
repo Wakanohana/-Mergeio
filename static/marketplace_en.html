@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M&A Intelligence — Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:    #0e0f11; --paper:  #f5f2ec; --cream:  #ede9e0;
+    --gold:   #c8a84b; --green:  #2d6a4f; --green2: #52b788;
+    --red:    #9b2226; --amber:  #ae6b10; --muted:  #6b6760;
+    --border: #d4cfc5; --white:  #ffffff;
+    --font-d: 'DM Serif Display', serif;
+    --font-b: 'Manrope', sans-serif;
+    --font-m: 'DM Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--font-b); line-height: 1.5; }
+
+  /* Topbar */
+  .topbar { background: var(--ink); color: var(--paper); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 52px; position: sticky; top: 0; z-index: 100; }
+  .topbar-left { display: flex; align-items: center; gap: 20px; }
+  .logo { font-family: var(--font-m); font-size: 12px; letter-spacing: .1em; background: var(--gold); color: var(--ink); padding: 3px 8px; border-radius: 2px; font-weight: 500; }
+  .nav-links { display: flex; gap: 2px; }
+  .nav-link { font-family: var(--font-m); font-size: 11px; letter-spacing: .07em; color: rgba(255,255,255,.45); padding: 6px 12px; border-radius: 3px; cursor: pointer; transition: background .15s, color .15s; text-decoration: none; }
+  .nav-link:hover, .nav-link.active { background: rgba(255,255,255,.08); color: rgba(255,255,255,.9); }
+  .topbar-right { font-family: var(--font-m); font-size: 11px; color: rgba(255,255,255,.35); letter-spacing: .06em; }
+
+  /* Hero */
+  .hero { background: var(--cream); border-bottom: 1px solid var(--border); padding: 28px 32px 24px; }
+  .hero h1 { font-family: var(--font-d); font-size: 30px; font-weight: 400; margin-bottom: 4px; }
+  .hero-sub { font-size: 14px; color: var(--muted); }
+  .hero-stats { display: flex; gap: 32px; margin-top: 18px; flex-wrap: wrap; }
+  .hero-stat-val { font-family: var(--font-d); font-size: 22px; }
+  .hero-stat-lbl { font-family: var(--font-m); font-size: 10px; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; margin-top: 1px; }
+
+  /* Layout */
+  .layout { display: flex; min-height: calc(100vh - 130px); }
+
+  /* Sidebar */
+  .sidebar { width: 240px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 24px 20px; background: var(--white); position: sticky; top: 52px; align-self: flex-start; max-height: calc(100vh - 52px); overflow-y: auto; }
+  .filter-group { margin-bottom: 24px; }
+  .filter-title { font-family: var(--font-m); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .filter-search { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-b); font-size: 13px; background: var(--paper); outline: none; }
+  .filter-search:focus { border-color: var(--ink); }
+  .filter-chip { display: inline-flex; align-items: center; padding: 5px 11px; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; cursor: pointer; margin: 0 4px 6px 0; transition: all .15s; user-select: none; background: var(--paper); }
+  .filter-chip:hover { border-color: var(--ink); }
+  .filter-chip.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  input[type=range] { width: 100%; accent-color: var(--ink); }
+  .range-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .filter-reset { width: 100%; padding: 8px; border: 1px solid var(--border); background: none; font-family: var(--font-m); font-size: 11px; letter-spacing: .07em; color: var(--muted); border-radius: 4px; cursor: pointer; transition: all .15s; }
+  .filter-reset:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* Main */
+  .main { flex: 1; padding: 24px 28px; }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .results-count { font-family: var(--font-m); font-size: 12px; color: var(--muted); letter-spacing: .05em; }
+  .sort-select { padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-m); font-size: 11px; background: var(--paper); outline: none; cursor: pointer; }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+
+  /* Cards */
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: box-shadow .2s, transform .2s; cursor: pointer; display: flex; flex-direction: column; }
+  .card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.09); transform: translateY(-2px); }
+  .card-header { padding: 16px 18px 12px; border-bottom: 1px solid var(--cream); }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .card-name { font-family: var(--font-d); font-size: 17px; line-height: 1.2; flex: 1; margin-right: 10px; }
+  .score-pill { font-family: var(--font-m); font-size: 13px; font-weight: 500; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+  .sc-p { background: #d8f3dc; color: #1b4332; }
+  .sc-s { background: #fef3cd; color: #7d4e00; }
+  .sc-d { background: #fde8e8; color: #7b1d1d; }
+  .card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-family: var(--font-m); font-size: 10px; letter-spacing: .07em; padding: 3px 8px; border-radius: 3px; background: var(--cream); color: var(--muted); text-transform: uppercase; }
+  .tag-sale   { background: #fff3e0; color: #7d4e00; }
+  .tag-opport { background: #e8f5e9; color: #1b5e20; }
+  .card-body { padding: 14px 18px; flex: 1; }
+  .card-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .kpi-val { font-family: var(--font-d); font-size: 18px; }
+  .kpi-lbl { font-family: var(--font-m); font-size: 10px; color: var(--muted); letter-spacing: .07em; text-transform: uppercase; margin-top: 1px; }
+  .card-bar-wrap { margin-top: 4px; }
+  .card-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .card-bar-track { height: 4px; background: var(--cream); border-radius: 10px; overflow: hidden; }
+  .card-bar-fill { height: 100%; border-radius: 10px; background: var(--ink); transition: width 1s cubic-bezier(.16,1,.3,1); }
+  .card-footer { padding: 10px 18px; border-top: 1px solid var(--cream); display: flex; justify-content: space-between; align-items: center; }
+  .card-valuation { font-family: var(--font-d); font-size: 15px; }
+  .card-valuation-lbl { font-family: var(--font-m); font-size: 9px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+  .card-cta { font-family: var(--font-m); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; padding: 5px 12px; background: var(--ink); color: var(--paper); border-radius: 3px; border: none; cursor: pointer; transition: opacity .15s; }
+  .card-cta:hover { opacity: .8; }
+
+  /* Empty */
+  .empty { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+  .empty p { font-family: var(--font-m); font-size: 13px; letter-spacing: .05em; }
+
+  /* Modal */
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--white); border-radius: 10px; max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto; }
+  .modal-header { background: var(--ink); color: var(--paper); padding: 22px 24px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: flex-start; }
+  .modal-title { font-family: var(--font-d); font-size: 22px; }
+  .modal-close { background: none; border: none; color: rgba(255,255,255,.5); font-size: 22px; cursor: pointer; }
+  .modal-close:hover { color: white; }
+  .modal-body { padding: 24px; }
+  .modal-section { margin-bottom: 20px; }
+  .modal-section-title { font-family: var(--font-m); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--cream); }
+  .modal-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .modal-kpi-val { font-family: var(--font-d); font-size: 20px; }
+  .modal-kpi-lbl { font-family: var(--font-m); font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .modal-criteres { display: flex; flex-direction: column; gap: 10px; }
+  .modal-crit-row { display: flex; align-items: center; gap: 12px; }
+  .modal-crit-name { font-size: 13px; font-weight: 500; width: 180px; flex-shrink: 0; }
+  .modal-crit-bar-track { flex: 1; height: 6px; background: var(--cream); border-radius: 10px; overflow: hidden; }
+  .modal-crit-bar-fill { height: 100%; border-radius: 10px; background: var(--ink); }
+  .modal-crit-pts { font-family: var(--font-m); font-size: 11px; color: var(--muted); width: 40px; text-align: right; }
+  .modal-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .contact-btn { width: 100%; padding: 12px; background: var(--ink); color: var(--paper); border: none; border-radius: 6px; font-family: var(--font-m); font-size: 12px; letter-spacing: .08em; cursor: pointer; transition: opacity .15s; }
+  .contact-btn:hover { opacity: .85; }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-left">
+    <span class="logo">M&A·AI</span>
+    <div class="nav-links">
+      <a class="nav-link" href="dashboard_en.html">Analyze P&L</a>
+      <a class="nav-link active">Marketplace</a>
+      <a class="nav-link" href="terminal_en.html">Live Terminal</a>
+    </div>
+  </div>
+  <span class="topbar-right">PHASE 3 · MVP v0.1</span>
+</nav>
+
+<div class="hero">
+  <h1>M&A Marketplace</h1>
+  <p class="hero-sub">AI-analyzed businesses — verified data, automatically calculated valuations</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-val" id="stat-total">8</div><div class="hero-stat-lbl">Businesses Listed</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">5</div><div class="hero-stat-lbl">For Sale</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">3</div><div class="hero-stat-lbl">Premium Score</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">$4.8M</div><div class="hero-stat-lbl">Avg. Valuation</div></div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="filter-group">
+      <div class="filter-title">Search</div>
+      <input class="filter-search" id="search" type="text" placeholder="Name, sector…" oninput="filtrer()">
+    </div>
+    <div class="filter-group">
+      <div class="filter-title">Status</div>
+      <span class="filter-chip active" data-filter="statut" data-val="tous" onclick="toggleChip(this,'statut')">All</span>
+      <span class="filter-chip" data-filter="statut" data-val="vente" onclick="toggleChip(this,'statut')">For Sale</span>
+      <span class="filter-chip" data-filter="statut" data-val="opportunite" onclick="toggleChip(this,'statut')">Opportunity</span>
+    </div>
+    <div class="filter-group">
+      <div class="filter-title">Sector</div>
+      <span class="filter-chip active" data-filter="secteur" data-val="tous" onclick="toggleChip(this,'secteur')">All</span>
+      <span class="filter-chip" data-filter="secteur" data-val="tech" onclick="toggleChip(this,'secteur')">Tech</span>
+      <span class="filter-chip" data-filter="secteur" data-val="commerce" onclick="toggleChip(this,'secteur')">Retail</span>
+      <span class="filter-chip" data-filter="secteur" data-val="service" onclick="toggleChip(this,'secteur')">Services</span>
+      <span class="filter-chip" data-filter="secteur" data-val="industrie" onclick="toggleChip(this,'secteur')">Industry</span>
+    </div>
+    <div class="filter-group">
+      <div class="filter-title">Minimum Score</div>
+      <div class="range-label"><span>0</span><span id="score-min-val">0</span></div>
+      <input type="range" id="score-min" min="0" max="100" value="0" oninput="document.getElementById('score-min-val').textContent=this.value; filtrer()">
+    </div>
+    <div class="filter-group">
+      <div class="filter-title">Profile</div>
+      <span class="filter-chip active" data-filter="profil" data-val="tous" onclick="toggleChip(this,'profil')">All</span>
+      <span class="filter-chip" data-filter="profil" data-val="Premium" onclick="toggleChip(this,'profil')">🟢 Premium</span>
+      <span class="filter-chip" data-filter="profil" data-val="Standard" onclick="toggleChip(this,'profil')">🟡 Standard</span>
+      <span class="filter-chip" data-filter="profil" data-val="Discount" onclick="toggleChip(this,'profil')">🔴 Discount</span>
+    </div>
+    <button class="filter-reset" onclick="resetFiltres()">Reset Filters</button>
+  </aside>
+
+  <main class="main">
+    <div class="toolbar">
+      <span class="results-count" id="results-count">8 businesses displayed</span>
+      <select class="sort-select" id="sort-select" onchange="filtrer()">
+        <option value="score">Sort by Score</option>
+        <option value="ca">Sort by Revenue</option>
+        <option value="valuation">Sort by Valuation</option>
+        <option value="nom">Sort by Name</option>
+      </select>
+    </div>
+    <div class="cards-grid" id="cards-grid"></div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal" onclick="fermerModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-nom">—</div>
+        <div style="font-family:var(--font-m);font-size:11px;opacity:.45;margin-top:4px" id="modal-meta">—</div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">Key Financial Figures (latest fiscal year)</div>
+        <div class="modal-kpis" id="modal-kpis"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Health Score Breakdown</div>
+        <div class="modal-criteres" id="modal-criteres"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">About the Business</div>
+        <p class="modal-desc" id="modal-desc">—</p>
+      </div>
+      <button class="contact-btn" onclick="alert('Secure messaging — Phase 4 · Verified parties only')">
+        Contact the Seller → (Coming Phase 4)
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── US Market data (all figures in USD) ───────────────────
+const ENTREPRISES = [
+  { id:1, nom:"TechDistrib LLC",         secteur:"commerce",  secteurLabel:"Tech Distribution",   statut:"vente",      region:"New York, NY",       ca:1_705_000,  ebitda:507_000,  resNet:352_275,  croissanceCA:29.2, margeEBITDA:29.7, margeNette:20.7, score:100, profil:"Premium",  valBas:3_042_000,  valHaut:4_056_000,
+    criteres:[{nom:"Revenue Growth",pts:25,max:25,note:"29.2% over 3 years"},{nom:"EBITDA Margin",pts:25,max:25,note:"29.7% — excellent"},{nom:"Net Profitability",pts:25,max:25,note:"20.7% of revenue"},{nom:"Consistency",pts:25,max:25,note:"3/3 profitable years"}],
+    desc:"B2B technology hardware distributor. Loyal enterprise client base with 3 major accounts on long-term contracts. Owner retiring — clean books, no litigation." },
+  { id:2, nom:"BioClean Solutions",      secteur:"service",   secteurLabel:"Environmental Svcs",   statut:"vente",      region:"Chicago, IL",        ca:1_078_000,  ebitda:215_600,  resNet:139_700,  croissanceCA:14.6, margeEBITDA:20.0, margeNette:13.0, score:78,  profil:"Premium",  valBas:1_293_600,  valHaut:1_724_800,
+    criteres:[{nom:"Revenue Growth",pts:15,max:25,note:"14.6%"},{nom:"EBITDA Margin",pts:25,max:25,note:"20.0%"},{nom:"Net Profitability",pts:18,max:25,note:"13.0%"},{nom:"Consistency",pts:25,max:25,note:"3/3 years"}],
+    desc:"Environmental consulting and industrial decontamination firm. State-certified. Team of 9 specialists. Portfolio of 40+ recurring industrial clients." },
+  { id:3, nom:"AlphaLogix Inc.",          secteur:"tech",      secteurLabel:"B2B SaaS",             statut:"opportunite",region:"Austin, TX",         ca:715_000,    ebitda:200_200,  resNet:136_400,  croissanceCA:38.3, margeEBITDA:28.0, margeNette:19.1, score:93,  profil:"Premium",  valBas:1_201_200,  valHaut:1_601_600,
+    criteres:[{nom:"Revenue Growth",pts:25,max:25,note:"38.3% — strong traction"},{nom:"EBITDA Margin",pts:25,max:25,note:"28.0%"},{nom:"Net Profitability",pts:18,max:25,note:"19.1%"},{nom:"Consistency",pts:25,max:25,note:"3/3 years"}],
+    desc:"SaaS scheduling platform for construction SMBs. 120 paying subscribers, $59K MRR. 100% organic growth, zero debt. Raising a seed round — equity entry opportunity." },
+  { id:4, nom:"Duval Woodworks LLC",      secteur:"industrie", secteurLabel:"Custom Manufacturing", statut:"vente",      region:"Portland, OR",       ca:1_320_000,  ebitda:158_400,  resNet:92_400,   croissanceCA:5.2,  margeEBITDA:12.0, margeNette:7.0,  score:56,  profil:"Standard", valBas:633_600,    valHaut:950_400,
+    criteres:[{nom:"Revenue Growth",pts:8,max:25,note:"5.2% — stable"},{nom:"EBITDA Margin",pts:18,max:25,note:"12.0% — good"},{nom:"Net Profitability",pts:18,max:25,note:"7.0%"},{nom:"Consistency",pts:25,max:25,note:"3/3 years"}],
+    desc:"Custom aluminum & PVC fabrication shop, founded 1989. Order book full 8 months ahead. Recent machinery (< 5 years). Owner pivoting to a new venture." },
+  { id:5, nom:"CoachDev Training Co.",    secteur:"service",   secteurLabel:"Corporate Training",   statut:"vente",      region:"Denver, CO",         ca:462_000,    ebitda:69_300,   resNet:41_800,   croissanceCA:-3.1, margeEBITDA:15.0, margeNette:9.0,  score:43,  profil:"Discount", valBas:173_250,    valHaut:277_200,
+    criteres:[{nom:"Revenue Growth",pts:0,max:25,note:"−3.1% — declining"},{nom:"EBITDA Margin",pts:18,max:25,note:"15.0%"},{nom:"Net Profitability",pts:10,max:25,note:"9.0%"},{nom:"Consistency",pts:12,max:25,note:"2/3 profitable years"}],
+    desc:"Qualiopi-certified training company specializing in leadership & soft skills. Revenue impacted by federal funding reforms. Strong B2B rebound potential with repositioning." },
+  { id:6, nom:"Central Print Group",      secteur:"industrie", secteurLabel:"Commercial Printing",  statut:"vente",      region:"Detroit, MI",        ca:2_310_000,  ebitda:277_200,  resNet:161_700,  croissanceCA:2.8,  margeEBITDA:12.0, margeNette:7.0,  score:51,  profil:"Standard", valBas:1_108_800,  valHaut:1_663_200,
+    criteres:[{nom:"Revenue Growth",pts:8,max:25,note:"2.8% — low growth"},{nom:"EBITDA Margin",pts:18,max:25,note:"12.0%"},{nom:"Net Profitability",pts:18,max:25,note:"7.0%"},{nom:"Consistency",pts:25,max:25,note:"3/3 years"}],
+    desc:"B2B offset printing company with 3 modern rotary presses (< 4 years old). Long-term contracts with municipal governments and national retail chains. Automation upside untapped." },
+  { id:7, nom:"MedTech Devices Corp.",    secteur:"tech",      secteurLabel:"Medical Devices",      statut:"opportunite",region:"Boston, MA",         ca:979_000,    ebitda:205_590,  resNet:149_590,  croissanceCA:22.0, margeEBITDA:21.0, margeNette:15.3, score:88,  profil:"Premium",  valBas:1_233_540,  valHaut:1_644_720,
+    criteres:[{nom:"Revenue Growth",pts:25,max:25,note:"22.0%"},{nom:"EBITDA Margin",pts:25,max:25,note:"21.0%"},{nom:"Net Profitability",pts:18,max:25,note:"15.3%"},{nom:"Consistency",pts:25,max:25,note:"3/3 years"}],
+    desc:"Manufacturer of OR monitoring devices. FDA Class II cleared. Distribution in 6 countries. Seeking strategic partner for US hospital network expansion." },
+  { id:8, nom:"Maison Leroux Gourmet",    secteur:"commerce",  secteurLabel:"Specialty Retail",     statut:"vente",      region:"Miami, FL",          ca:418_000,    ebitda:37_400,   resNet:15_400,   croissanceCA:8.5,  margeEBITDA:8.9,  margeNette:3.7,  score:31,  profil:"Discount", valBas:93_500,     valHaut:149_600,
+    criteres:[{nom:"Revenue Growth",pts:8,max:25,note:"8.5%"},{nom:"EBITDA Margin",pts:10,max:25,note:"8.9% — borderline"},{nom:"Net Profitability",pts:10,max:25,note:"3.7%"},{nom:"Consistency",pts:12,max:25,note:"2/3 profitable years"}],
+    desc:"Independent specialty food boutique in prime tourist area. Open since 2014. Premium location, 4-year commercial lease remaining. Ideal first acquisition for lifestyle buyers." },
+];
+
+const filtresActifs = { statut: 'tous', secteur: 'tous', profil: 'tous' };
+
+function fmt(v) {
+  if (v >= 1_000_000) return '$' + (v / 1_000_000).toFixed(2) + 'M';
+  if (v >= 1_000)     return '$' + (v / 1_000).toFixed(0) + 'K';
+  return '$' + v;
+}
+function fmtFull(v) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
+}
+function classProfil(p) {
+  return p === 'Premium' ? 'sc-p' : p === 'Standard' ? 'sc-s' : 'sc-d';
+}
+
+function renderCarte(e) {
+  const tagStatut = e.statut === 'vente'
+    ? '<span class="tag tag-sale">For Sale</span>'
+    : '<span class="tag tag-opport">Opportunity</span>';
+  return `
+    <div class="card" onclick="ouvrirModal(${e.id})">
+      <div class="card-header">
+        <div class="card-top">
+          <div class="card-name">${e.nom}</div>
+          <span class="score-pill ${classProfil(e.profil)}">${e.score}/100</span>
+        </div>
+        <div class="card-tags">
+          ${tagStatut}
+          <span class="tag">${e.secteurLabel}</span>
+          <span class="tag">${e.region}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-kpis">
+          <div><div class="kpi-val">${fmt(e.ca)}</div><div class="kpi-lbl">Revenue</div></div>
+          <div><div class="kpi-val">${fmt(e.ebitda)}</div><div class="kpi-lbl">EBITDA</div></div>
+        </div>
+        <div class="card-bar-wrap">
+          <div class="card-bar-label"><span>Health Score</span><span>${e.score}/100</span></div>
+          <div class="card-bar-track"><div class="card-bar-fill" style="width:0%" data-target="${e.score}%"></div></div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div>
+          <div class="card-valuation">${fmt(e.valBas)} – ${fmt(e.valHaut)}</div>
+          <div class="card-valuation-lbl">Estimated Valuation Range</div>
+        </div>
+        <button class="card-cta">View →</button>
+      </div>
+    </div>`;
+}
+
+function filtrer() {
+  const recherche = document.getElementById('search').value.toLowerCase();
+  const scoreMin  = parseInt(document.getElementById('score-min').value);
+  const tri       = document.getElementById('sort-select').value;
+
+  let resultats = ENTREPRISES.filter(e => {
+    if (recherche && !e.nom.toLowerCase().includes(recherche) && !e.secteurLabel.toLowerCase().includes(recherche)) return false;
+    if (filtresActifs.statut !== 'tous' && e.statut !== filtresActifs.statut) return false;
+    if (filtresActifs.secteur !== 'tous' && e.secteur !== filtresActifs.secteur) return false;
+    if (filtresActifs.profil !== 'tous' && e.profil !== filtresActifs.profil) return false;
+    if (e.score < scoreMin) return false;
+    return true;
+  });
+
+  resultats.sort((a, b) => {
+    if (tri === 'score')     return b.score - a.score;
+    if (tri === 'ca')        return b.ca - a.ca;
+    if (tri === 'valuation') return b.valHaut - a.valHaut;
+    if (tri === 'nom')       return a.nom.localeCompare(b.nom);
+    return 0;
+  });
+
+  const grid = document.getElementById('cards-grid');
+  grid.innerHTML = resultats.length
+    ? resultats.map(renderCarte).join('')
+    : `<div class="empty"><div class="empty-icon">🔍</div><p>NO BUSINESSES MATCH YOUR CRITERIA</p></div>`;
+
+  document.getElementById('results-count').textContent =
+    `${resultats.length} business${resultats.length !== 1 ? 'es' : ''} displayed`;
+
+  setTimeout(() => {
+    document.querySelectorAll('.card-bar-fill').forEach(bar => {
+      bar.style.transition = 'width 1s cubic-bezier(.16,1,.3,1)';
+      bar.style.width = bar.dataset.target;
+    });
+  }, 50);
+}
+
+function toggleChip(chip, groupe) {
+  document.querySelectorAll(`[data-filter="${groupe}"]`).forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  filtresActifs[groupe] = chip.dataset.val;
+  filtrer();
+}
+
+function resetFiltres() {
+  document.getElementById('search').value      = '';
+  document.getElementById('score-min').value   = 0;
+  document.getElementById('score-min-val').textContent = '0';
+  document.getElementById('sort-select').value = 'score';
+  ['statut','secteur','profil'].forEach(g => {
+    filtresActifs[g] = 'tous';
+    document.querySelectorAll(`[data-filter="${g}"]`).forEach(c => c.classList.remove('active'));
+    document.querySelector(`[data-filter="${g}"][data-val="tous"]`).classList.add('active');
+  });
+  filtrer();
+}
+
+function ouvrirModal(id) {
+  const e = ENTREPRISES.find(x => x.id === id);
+  if (!e) return;
+  document.getElementById('modal-nom').textContent  = e.nom;
+  document.getElementById('modal-meta').textContent = `${e.secteurLabel} · ${e.region} · Score ${e.score}/100 · ${e.profil}`;
+  document.getElementById('modal-kpis').innerHTML = `
+    <div><div class="modal-kpi-val">${fmtFull(e.ca)}</div><div class="modal-kpi-lbl">Revenue</div></div>
+    <div><div class="modal-kpi-val">${fmtFull(e.ebitda)}</div><div class="modal-kpi-lbl">EBITDA</div></div>
+    <div><div class="modal-kpi-val">${e.margeEBITDA.toFixed(1)}%</div><div class="modal-kpi-lbl">EBITDA Margin</div></div>
+    <div><div class="modal-kpi-val">${fmtFull(e.resNet)}</div><div class="modal-kpi-lbl">Net Income</div></div>
+    <div><div class="modal-kpi-val">${e.margeNette.toFixed(1)}%</div><div class="modal-kpi-lbl">Net Margin</div></div>
+    <div><div class="modal-kpi-val">${e.croissanceCA > 0 ? '+' : ''}${e.croissanceCA.toFixed(1)}%</div><div class="modal-kpi-lbl">Rev. Growth</div></div>`;
+  document.getElementById('modal-criteres').innerHTML = e.criteres.map(c => `
+    <div class="modal-crit-row">
+      <span class="modal-crit-name">${c.nom}</span>
+      <div class="modal-crit-bar-track"><div class="modal-crit-bar-fill" style="width:${(c.pts/c.max)*100}%"></div></div>
+      <span class="modal-crit-pts">${c.pts}/${c.max}</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:-4px;padding-left:192px">${c.note}</div>`).join('');
+  document.getElementById('modal-desc').textContent = e.desc;
+  document.getElementById('modal').classList.add('open');
+}
+
+function fermerModal(e) {
+  if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('open');
+}
+
+filtrer();
+</script>
+</body>
+</html>

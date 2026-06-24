@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketplace M&A IA — Entreprises à céder</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ── Variables ────────────────────────────────────────── */
+  :root {
+    --ink:    #0e0f11;
+    --paper:  #f5f2ec;
+    --cream:  #ede9e0;
+    --gold:   #c8a84b;
+    --green:  #2d6a4f;
+    --green2: #52b788;
+    --red:    #9b2226;
+    --amber:  #ae6b10;
+    --muted:  #6b6760;
+    --border: #d4cfc5;
+    --white:  #ffffff;
+    --font-d: 'DM Serif Display', serif;
+    --font-b: 'Manrope', sans-serif;
+    --font-m: 'DM Mono', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--font-b); line-height: 1.5; }
+
+  /* ── Header ───────────────────────────────────────────── */
+  .topbar {
+    background: var(--ink); color: var(--paper);
+    padding: 0 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 52px; position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 20px; }
+  .logo { font-family: var(--font-m); font-size: 12px; letter-spacing: .1em; background: var(--gold); color: var(--ink); padding: 3px 8px; border-radius: 2px; font-weight: 500; }
+  .nav-links { display: flex; gap: 2px; }
+  .nav-link { font-family: var(--font-m); font-size: 11px; letter-spacing: .07em; color: rgba(255,255,255,.45); padding: 6px 12px; border-radius: 3px; cursor: pointer; transition: background .15s, color .15s; text-decoration: none; }
+  .nav-link:hover, .nav-link.active { background: rgba(255,255,255,.08); color: rgba(255,255,255,.9); }
+  .topbar-right { font-family: var(--font-m); font-size: 11px; color: rgba(255,255,255,.35); letter-spacing: .06em; }
+
+  /* ── Hero band ────────────────────────────────────────── */
+  .hero { background: var(--cream); border-bottom: 1px solid var(--border); padding: 28px 32px 24px; }
+  .hero h1 { font-family: var(--font-d); font-size: 30px; font-weight: 400; margin-bottom: 4px; }
+  .hero-sub { font-size: 14px; color: var(--muted); }
+  .hero-stats { display: flex; gap: 32px; margin-top: 18px; flex-wrap: wrap; }
+  .hero-stat { }
+  .hero-stat-val { font-family: var(--font-d); font-size: 22px; }
+  .hero-stat-lbl { font-family: var(--font-m); font-size: 10px; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; margin-top: 1px; }
+
+  /* ── Layout ───────────────────────────────────────────── */
+  .layout { display: flex; gap: 0; min-height: calc(100vh - 130px); }
+
+  /* ── Sidebar filtres ──────────────────────────────────── */
+  .sidebar {
+    width: 240px; flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    padding: 24px 20px;
+    background: var(--white);
+    position: sticky; top: 52px; align-self: flex-start;
+    max-height: calc(100vh - 52px); overflow-y: auto;
+  }
+  .filter-group { margin-bottom: 24px; }
+  .filter-title { font-family: var(--font-m); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .filter-search { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-b); font-size: 13px; background: var(--paper); outline: none; }
+  .filter-search:focus { border-color: var(--ink); }
+  .filter-chip { display: inline-flex; align-items: center; padding: 5px 11px; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; cursor: pointer; margin: 0 4px 6px 0; transition: background .15s, border-color .15s, color .15s; user-select: none; background: var(--paper); }
+  .filter-chip:hover { border-color: var(--ink); }
+  .filter-chip.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .range-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  input[type=range] { width: 100%; accent-color: var(--ink); }
+  .filter-select { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-b); font-size: 13px; background: var(--paper); outline: none; cursor: pointer; }
+  .filter-reset { width: 100%; padding: 8px; border: 1px solid var(--border); background: none; font-family: var(--font-m); font-size: 11px; letter-spacing: .07em; color: var(--muted); border-radius: 4px; cursor: pointer; transition: all .15s; }
+  .filter-reset:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* ── Main grid ────────────────────────────────────────── */
+  .main { flex: 1; padding: 24px 28px; }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .results-count { font-family: var(--font-m); font-size: 12px; color: var(--muted); letter-spacing: .05em; }
+  .sort-select { padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-m); font-size: 11px; background: var(--paper); outline: none; cursor: pointer; letter-spacing: .05em; }
+
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+
+  /* ── Fiche entreprise ─────────────────────────────────── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: box-shadow .2s, transform .2s;
+    cursor: pointer;
+    display: flex; flex-direction: column;
+  }
+  .card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.09); transform: translateY(-2px); }
+
+  .card-header { padding: 16px 18px 12px; border-bottom: 1px solid var(--cream); }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .card-name { font-family: var(--font-d); font-size: 17px; line-height: 1.2; flex: 1; margin-right: 10px; }
+  .score-pill {
+    font-family: var(--font-m); font-size: 13px; font-weight: 500;
+    padding: 3px 10px; border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+  }
+  .score-premium { background: #d8f3dc; color: #1b4332; }
+  .score-standard { background: #fef3cd; color: #7d4e00; }
+  .score-decote   { background: #fde8e8; color: #7b1d1d; }
+
+  .card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-family: var(--font-m); font-size: 10px; letter-spacing: .07em; padding: 3px 8px; border-radius: 3px; background: var(--cream); color: var(--muted); text-transform: uppercase; }
+  .tag-vente  { background: #fff3e0; color: #7d4e00; }
+  .tag-opport { background: #e8f5e9; color: #1b5e20; }
+
+  .card-body { padding: 14px 18px; flex: 1; }
+  .card-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .kpi { }
+  .kpi-val { font-family: var(--font-d); font-size: 18px; letter-spacing: -.01em; }
+  .kpi-lbl { font-family: var(--font-m); font-size: 10px; color: var(--muted); letter-spacing: .07em; text-transform: uppercase; margin-top: 1px; }
+
+  .card-bar-wrap { margin-top: 4px; }
+  .card-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .card-bar-track { height: 4px; background: var(--cream); border-radius: 10px; overflow: hidden; }
+  .card-bar-fill { height: 100%; border-radius: 10px; background: var(--ink); transition: width 1s cubic-bezier(.16,1,.3,1); }
+
+  .card-footer { padding: 10px 18px; border-top: 1px solid var(--cream); display: flex; justify-content: space-between; align-items: center; }
+  .card-valuation { font-family: var(--font-d); font-size: 15px; color: var(--ink); }
+  .card-valuation-lbl { font-family: var(--font-m); font-size: 9px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+  .card-cta { font-family: var(--font-m); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; padding: 5px 12px; background: var(--ink); color: var(--paper); border-radius: 3px; border: none; cursor: pointer; transition: opacity .15s; }
+  .card-cta:hover { opacity: .8; }
+
+  /* ── Empty state ──────────────────────────────────────── */
+  .empty { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+  .empty p { font-family: var(--font-m); font-size: 13px; letter-spacing: .05em; }
+
+  /* ── Modal détail ─────────────────────────────────────── */
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--white); border-radius: 10px; max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto; }
+  .modal-header { background: var(--ink); color: var(--paper); padding: 22px 24px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: flex-start; }
+  .modal-title { font-family: var(--font-d); font-size: 22px; }
+  .modal-close { background: none; border: none; color: rgba(255,255,255,.5); font-size: 22px; cursor: pointer; line-height: 1; padding: 0; }
+  .modal-close:hover { color: white; }
+  .modal-body { padding: 24px; }
+  .modal-section { margin-bottom: 20px; }
+  .modal-section-title { font-family: var(--font-m); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--cream); }
+  .modal-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .modal-kpi-val { font-family: var(--font-d); font-size: 20px; }
+  .modal-kpi-lbl { font-family: var(--font-m); font-size: 10px; color: var(--muted); letter-spacing: .06em; margin-top: 2px; }
+  .modal-criteres { display: flex; flex-direction: column; gap: 10px; }
+  .modal-crit-row { display: flex; align-items: center; gap: 12px; }
+  .modal-crit-name { font-size: 13px; font-weight: 500; width: 160px; flex-shrink: 0; }
+  .modal-crit-bar-track { flex: 1; height: 6px; background: var(--cream); border-radius: 10px; overflow: hidden; }
+  .modal-crit-bar-fill { height: 100%; border-radius: 10px; background: var(--ink); }
+  .modal-crit-pts { font-family: var(--font-m); font-size: 11px; color: var(--muted); width: 40px; text-align: right; flex-shrink: 0; }
+  .modal-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .contact-btn { width: 100%; padding: 12px; background: var(--ink); color: var(--paper); border: none; border-radius: 6px; font-family: var(--font-m); font-size: 12px; letter-spacing: .08em; cursor: pointer; transition: opacity .15s; }
+  .contact-btn:hover { opacity: .85; }
+</style>
+</head>
+<body>
+
+<!-- ── Barre de navigation ─────────────────────────────── -->
+<nav class="topbar">
+  <div class="topbar-left">
+    <span class="logo">M&A·IA</span>
+    <div class="nav-links">
+      <a class="nav-link" href="dashboard_ma.html">Analyser un P&L</a>
+      <a class="nav-link active">Marketplace</a>
+      <a class="nav-link" href="#">Alertes</a>
+    </div>
+  </div>
+  <span class="topbar-right">PHASE 3 · MVP v0.1</span>
+</nav>
+
+<!-- ── Hero ───────────────────────────────────────────── -->
+<div class="hero">
+  <h1>Marketplace M&A</h1>
+  <p class="hero-sub">Entreprises analysées par IA — données vérifiées, valorisations calculées automatiquement</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-val" id="stat-total">8</div><div class="hero-stat-lbl">Entreprises listées</div></div>
+    <div class="hero-stat"><div class="hero-stat-val" id="stat-vente">5</div><div class="hero-stat-lbl">À céder</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">3</div><div class="hero-stat-lbl">Score Premium</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">4,2 M€</div><div class="hero-stat-lbl">Valorisation moyenne</div></div>
+  </div>
+</div>
+
+<!-- ── Layout principal ───────────────────────────────── -->
+<div class="layout">
+
+  <!-- Sidebar filtres -->
+  <aside class="sidebar">
+    <div class="filter-group">
+      <div class="filter-title">Recherche</div>
+      <input class="filter-search" id="search" type="text" placeholder="Nom, secteur…" oninput="filtrer()">
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-title">Statut</div>
+      <span class="filter-chip active" data-filter="statut" data-val="tous" onclick="toggleChip(this,'statut')">Tous</span>
+      <span class="filter-chip" data-filter="statut" data-val="vente" onclick="toggleChip(this,'statut')">À céder</span>
+      <span class="filter-chip" data-filter="statut" data-val="opportunite" onclick="toggleChip(this,'statut')">Opportunité</span>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-title">Secteur</div>
+      <span class="filter-chip active" data-filter="secteur" data-val="tous" onclick="toggleChip(this,'secteur')">Tous</span>
+      <span class="filter-chip" data-filter="secteur" data-val="tech" onclick="toggleChip(this,'secteur')">Tech</span>
+      <span class="filter-chip" data-filter="secteur" data-val="commerce" onclick="toggleChip(this,'secteur')">Commerce</span>
+      <span class="filter-chip" data-filter="secteur" data-val="service" onclick="toggleChip(this,'secteur')">Services</span>
+      <span class="filter-chip" data-filter="secteur" data-val="industrie" onclick="toggleChip(this,'secteur')">Industrie</span>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-title">Score minimum</div>
+      <div class="range-label"><span>0</span><span id="score-min-val">0</span></div>
+      <input type="range" id="score-min" min="0" max="100" value="0" oninput="document.getElementById('score-min-val').textContent=this.value; filtrer()">
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-title">Profil</div>
+      <span class="filter-chip active" data-filter="profil" data-val="tous" onclick="toggleChip(this,'profil')">Tous</span>
+      <span class="filter-chip" data-filter="profil" data-val="Premium" onclick="toggleChip(this,'profil')">🟢 Premium</span>
+      <span class="filter-chip" data-filter="profil" data-val="Standard" onclick="toggleChip(this,'profil')">🟡 Standard</span>
+      <span class="filter-chip" data-filter="profil" data-val="Décote" onclick="toggleChip(this,'profil')">🔴 Décote</span>
+    </div>
+
+    <button class="filter-reset" onclick="resetFiltres()">Réinitialiser les filtres</button>
+  </aside>
+
+  <!-- Grille principale -->
+  <main class="main">
+    <div class="toolbar">
+      <span class="results-count" id="results-count">8 entreprises affichées</span>
+      <select class="sort-select" id="sort-select" onchange="filtrer()">
+        <option value="score">Trier par score</option>
+        <option value="ca">Trier par CA</option>
+        <option value="valuation">Trier par valorisation</option>
+        <option value="nom">Trier par nom</option>
+      </select>
+    </div>
+    <div class="cards-grid" id="cards-grid"></div>
+  </main>
+</div>
+
+<!-- ── Modal détail entreprise ─────────────────────────── -->
+<div class="modal-backdrop" id="modal" onclick="fermerModal(event)">
+  <div class="modal" id="modal-content">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-nom">—</div>
+        <div style="font-family:var(--font-m);font-size:11px;opacity:.45;letter-spacing:.07em;margin-top:4px" id="modal-meta">—</div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">Indicateurs financiers (dernière année)</div>
+        <div class="modal-kpis" id="modal-kpis"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Détail du score de santé</div>
+        <div class="modal-criteres" id="modal-criteres"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">À propos de l'entreprise</div>
+        <p class="modal-desc" id="modal-desc">—</p>
+      </div>
+      <button class="contact-btn" onclick="alert('Fonctionnalité Phase 4 — Mise en relation sécurisée')">
+        Contacter le cédant → (Phase 4)
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  MARKETPLACE.JS
+//  Base de données fictive + moteur de filtres
+// ═══════════════════════════════════════════════════════════
+
+// ── Données fictives réalistes ────────────────────────────
+// Chaque entreprise est un objet JavaScript (= un "dictionnaire" comme en Python)
+// avec exactement les mêmes clés que notre algorithme de scoring.
+
+const ENTREPRISES = [
+  {
+    id: 1,
+    nom: "TechDistrib SARL",
+    secteur: "commerce", secteurLabel: "Distribution tech",
+    statut: "vente",
+    region: "Île-de-France",
+    ca: 1_550_000, ebitda: 461_000, resNet: 320_250,
+    croissanceCA: 29.2, margeEBITDA: 29.7, margeNette: 20.7,
+    score: 100, profil: "Premium",
+    valBas: 2_766_000, valHaut: 3_688_000,
+    multiBas: 6.0, multiHaut: 8.0,
+    annees: 3, anneesPositives: 3,
+    criteres: [
+      { nom: "Croissance CA",      pts: 25, max: 25, note: "29.2% sur 3 ans" },
+      { nom: "Marge EBITDA",       pts: 25, max: 25, note: "29.7% — excellent" },
+      { nom: "Rentabilité nette",  pts: 25, max: 25, note: "20.7% du CA" },
+      { nom: "Régularité",         pts: 25, max: 25, note: "3/3 années positives" },
+    ],
+    desc: "Distributeur spécialisé en matériel informatique professionnel. Clientèle BtoB fidèle, contrats cadres avec 3 grands comptes. Cession pour départ à la retraite du dirigeant fondateur.",
+  },
+  {
+    id: 2,
+    nom: "BioClean Expertise",
+    secteur: "service", secteurLabel: "Services environnementaux",
+    statut: "vente",
+    region: "Auvergne-Rhône-Alpes",
+    ca: 980_000, ebitda: 196_000, resNet: 127_000,
+    croissanceCA: 14.6, margeEBITDA: 20.0, margeNette: 13.0,
+    score: 78, profil: "Premium",
+    valBas: 1_176_000, valHaut: 1_568_000,
+    multiBas: 6.0, multiHaut: 8.0,
+    annees: 3, anneesPositives: 3,
+    criteres: [
+      { nom: "Croissance CA",      pts: 15, max: 25, note: "14.6%" },
+      { nom: "Marge EBITDA",       pts: 25, max: 25, note: "20.0%" },
+      { nom: "Rentabilité nette",  pts: 18, max: 25, note: "13.0%" },
+      { nom: "Régularité",         pts: 25, max: 25, note: "3/3 années" },
+    ],
+    desc: "Cabinet de conseil en environnement et décontamination industrielle. Agrément préfectoral. Équipe de 9 techniciens spécialisés. Portefeuille de 40+ clients industriels récurrents.",
+  },
+  {
+    id: 3,
+    nom: "AlphaLogix SAS",
+    secteur: "tech", secteurLabel: "Logiciel B2B",
+    statut: "opportunite",
+    region: "Occitanie",
+    ca: 650_000, ebitda: 182_000, resNet: 124_000,
+    croissanceCA: 38.3, margeEBITDA: 28.0, margeNette: 19.1,
+    score: 93, profil: "Premium",
+    valBas: 1_092_000, valHaut: 1_456_000,
+    multiBas: 6.0, multiHaut: 8.0,
+    annees: 3, anneesPositives: 3,
+    criteres: [
+      { nom: "Croissance CA",      pts: 25, max: 25, note: "38.3% — forte traction" },
+      { nom: "Marge EBITDA",       pts: 25, max: 25, note: "28.0%" },
+      { nom: "Rentabilité nette",  pts: 18, max: 25, note: "19.1%" },
+      { nom: "Régularité",         pts: 25, max: 25, note: "3/3 années" },
+    ],
+    desc: "Éditeur SaaS de gestion de planning pour les PME du BTP. 120 clients abonnés, MRR de 54k€. Croissance organique, zéro dette. Levée de fonds en cours — opportunité d'entrée au capital.",
+  },
+  {
+    id: 4,
+    nom: "Menuiserie Duval & Fils",
+    secteur: "industrie", secteurLabel: "Artisanat industriel",
+    statut: "vente",
+    region: "Bretagne",
+    ca: 1_200_000, ebitda: 144_000, resNet: 84_000,
+    croissanceCA: 5.2, margeEBITDA: 12.0, margeNette: 7.0,
+    score: 56, profil: "Standard",
+    valBas: 576_000, valHaut: 864_000,
+    multiBas: 4.0, multiHaut: 6.0,
+    annees: 3, anneesPositives: 3,
+    criteres: [
+      { nom: "Croissance CA",      pts: 8,  max: 25, note: "5.2% — stable" },
+      { nom: "Marge EBITDA",       pts: 18, max: 25, note: "12.0% — bon" },
+      { nom: "Rentabilité nette",  pts: 18, max: 25, note: "7.0%" },
+      { nom: "Régularité",         pts: 25, max: 25, note: "3/3 années" },
+    ],
+    desc: "Atelier de menuiserie aluminium et PVC, fondé en 1989. Carnet de commandes plein sur 8 mois. Parc machines récent (< 5 ans). Cession pour reconversion professionnelle du dirigeant.",
+  },
+  {
+    id: 5,
+    nom: "CoachDev Formation",
+    secteur: "service", secteurLabel: "Formation professionnelle",
+    statut: "vente",
+    region: "Nouvelle-Aquitaine",
+    ca: 420_000, ebitda: 63_000, resNet: 38_000,
+    croissanceCA: -3.1, margeEBITDA: 15.0, margeNette: 9.0,
+    score: 43, profil: "Décote",
+    valBas: 157_500, valHaut: 252_000,
+    multiBas: 2.5, multiHaut: 4.0,
+    annees: 3, anneesPositives: 2,
+    criteres: [
+      { nom: "Croissance CA",      pts: 0,  max: 25, note: "−3.1% — déclin" },
+      { nom: "Marge EBITDA",       pts: 18, max: 25, note: "15.0%" },
+      { nom: "Rentabilité nette",  pts: 10, max: 25, note: "9.0%" },
+      { nom: "Régularité",         pts: 12, max: 25, note: "2/3 années positives" },
+    ],
+    desc: "Organisme de formation certifié Qualiopi, spécialisé en management et développement personnel. Impact de la réforme CPF sur le CA. Fort potentiel de redressement avec recentrage BtoB.",
+  },
+  {
+    id: 6,
+    nom: "Imprimerie Centrale Nord",
+    secteur: "industrie", secteurLabel: "Imprimerie offset",
+    statut: "vente",
+    region: "Hauts-de-France",
+    ca: 2_100_000, ebitda: 252_000, resNet: 147_000,
+    croissanceCA: 2.8, margeEBITDA: 12.0, margeNette: 7.0,
+    score: 51, profil: "Standard",
+    valBas: 1_008_000, valHaut: 1_512_000,
+    multiBas: 4.0, multiHaut: 6.0,
+    annees: 3, anneesPositives: 3,
+    criteres: [
+      { nom: "Croissance CA",      pts: 8,  max: 25, note: "2.8% — faible" },
+      { nom: "Marge EBITDA",       pts: 18, max: 25, note: "12.0%" },
+      { nom: "Rentabilité nette",  pts: 18, max: 25, note: "7.0%" },
+      { nom: "Régularité",         pts: 25, max: 25, note: "3/3 années" },
+    ],
+    desc: "Imprimerie B2B avec 3 rotatives offset récentes. Contrats de longue durée avec collectivités locales et enseignes nationales. Potentiel d'automatisation inexploité.",
+  },
+  {
+    id: 7,
+    nom: "MedTech Devices",
+    secteur: "tech", secteurLabel: "Dispositifs médicaux",
+    statut: "opportunite",
+    region: "Grand Est",
+    ca: 890_000, ebitda: 187_000, resNet: 136_000,
+    croissanceCA: 22.0, margeEBITDA: 21.0, margeNette: 15.3,
+    score: 88, profil: "Premium",
+    valBas: 1_122_000, valHaut: 1_496_000,
+    multiBas: 6.0, multiHaut: 8.0,
+    annees: 3, anneesPositives: 3,
+    criteres: [
+      { nom: "Croissance CA",      pts: 25, max: 25, note: "22.0%" },
+      { nom: "Marge EBITDA",       pts: 25, max: 25, note: "21.0%" },
+      { nom: "Rentabilité nette",  pts: 18, max: 25, note: "15.3%" },
+      { nom: "Régularité",         pts: 25, max: 25, note: "3/3 années" },
+    ],
+    desc: "Fabricant de dispositifs de monitoring pour blocs opératoires. Certification CE classe IIa. Distribution dans 6 pays européens. Recherche partenaire stratégique pour accélérer l'export.",
+  },
+  {
+    id: 8,
+    nom: "Épicerie Fine Maison Leroux",
+    secteur: "commerce", secteurLabel: "Commerce alimentaire",
+    statut: "vente",
+    region: "Provence-Alpes-Côte d'Azur",
+    ca: 380_000, ebitda: 34_000, resNet: 14_000,
+    croissanceCA: 8.5, margeEBITDA: 8.9, margeNette: 3.7,
+    score: 31, profil: "Décote",
+    valBas: 85_000, valHaut: 136_000,
+    multiBas: 2.5, multiHaut: 4.0,
+    annees: 3, anneesPositives: 2,
+    criteres: [
+      { nom: "Croissance CA",      pts: 8,  max: 25, note: "8.5%" },
+      { nom: "Marge EBITDA",       pts: 10, max: 25, note: "8.9% — limite" },
+      { nom: "Rentabilité nette",  pts: 10, max: 25, note: "3.7%" },
+      { nom: "Régularité",         pts: 12, max: 25, note: "2/3 années" },
+    ],
+    desc: "Épicerie fine indépendante en zone touristique, ouverte depuis 2014. Emplacement premium, bail commercial 4 ans restants. Clientèle locale et touristique. Idéale pour repreneurs cherchant un premier commerce.",
+  },
+];
+
+// ── État des filtres actifs ───────────────────────────────
+// Un objet qui mémorise les choix de l'utilisateur — comme des variables Python
+const filtresActifs = { statut: 'tous', secteur: 'tous', profil: 'tous' };
+
+// ── Formatage des nombres (= la fonction fmt() du Python) ──
+function fmt(v) {
+  if (v >= 1_000_000) return (v / 1_000_000).toFixed(2).replace('.', ',') + ' M€';
+  if (v >= 1_000)     return (v / 1_000).toFixed(0) + ' k€';
+  return v + ' €';
+}
+function fmtFull(v) {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v);
+}
+
+// ── Couleur selon le profil ────────────────────────────────
+function classProfil(p) {
+  return p === 'Premium' ? 'score-premium' : p === 'Standard' ? 'score-standard' : 'score-decote';
+}
+
+// ── Rendu d'une fiche entreprise ──────────────────────────
+// = l'équivalent d'un "print(rapport)" mais en HTML
+function renderCarte(e) {
+  const pct = e.score;
+  const tagStatut = e.statut === 'vente'
+    ? '<span class="tag tag-vente">À céder</span>'
+    : '<span class="tag tag-opport">Opportunité</span>';
+
+  return `
+    <div class="card" onclick="ouvrirModal(${e.id})">
+      <div class="card-header">
+        <div class="card-top">
+          <div class="card-name">${e.nom}</div>
+          <span class="score-pill ${classProfil(e.profil)}">${e.score}/100</span>
+        </div>
+        <div class="card-tags">
+          ${tagStatut}
+          <span class="tag">${e.secteurLabel}</span>
+          <span class="tag">${e.region}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-kpis">
+          <div class="kpi">
+            <div class="kpi-val">${fmt(e.ca)}</div>
+            <div class="kpi-lbl">Chiffre d'affaires</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-val">${fmt(e.ebitda)}</div>
+            <div class="kpi-lbl">EBITDA</div>
+          </div>
+        </div>
+        <div class="card-bar-wrap">
+          <div class="card-bar-label">
+            <span>Score de santé</span>
+            <span>${e.score}/100</span>
+          </div>
+          <div class="card-bar-track">
+            <div class="card-bar-fill" style="width:0%" data-target="${pct}%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div>
+          <div class="card-valuation">${fmt(e.valBas)} – ${fmt(e.valHaut)}</div>
+          <div class="card-valuation-lbl">Fourchette de valorisation</div>
+        </div>
+        <button class="card-cta">Voir →</button>
+      </div>
+    </div>`;
+}
+
+// ── Moteur de filtres ─────────────────────────────────────
+// Filtre le tableau ENTREPRISES selon les critères actifs
+// = l'équivalent d'un .query() pandas ou d'une boucle for avec conditions
+function filtrer() {
+  const recherche  = document.getElementById('search').value.toLowerCase();
+  const scoreMin   = parseInt(document.getElementById('score-min').value);
+  const tri        = document.getElementById('sort-select').value;
+
+  let resultats = ENTREPRISES.filter(e => {
+    // Filtre texte
+    if (recherche && !e.nom.toLowerCase().includes(recherche) && !e.secteurLabel.toLowerCase().includes(recherche)) return false;
+    // Filtre statut
+    if (filtresActifs.statut !== 'tous' && e.statut !== filtresActifs.statut) return false;
+    // Filtre secteur
+    if (filtresActifs.secteur !== 'tous' && e.secteur !== filtresActifs.secteur) return false;
+    // Filtre profil
+    if (filtresActifs.profil !== 'tous' && e.profil !== filtresActifs.profil) return false;
+    // Filtre score minimum
+    if (e.score < scoreMin) return false;
+    return true;
+  });
+
+  // Tri
+  resultats.sort((a, b) => {
+    if (tri === 'score')     return b.score - a.score;
+    if (tri === 'ca')        return b.ca - a.ca;
+    if (tri === 'valuation') return b.valHaut - a.valHaut;
+    if (tri === 'nom')       return a.nom.localeCompare(b.nom);
+    return 0;
+  });
+
+  // Rendu
+  const grid = document.getElementById('cards-grid');
+  grid.innerHTML = resultats.length
+    ? resultats.map(renderCarte).join('')
+    : `<div class="empty"><div class="empty-icon">🔍</div><p>AUCUNE ENTREPRISE NE CORRESPOND À CES CRITÈRES</p></div>`;
+
+  document.getElementById('results-count').textContent =
+    `${resultats.length} entreprise${resultats.length > 1 ? 's' : ''} affichée${resultats.length > 1 ? 's' : ''}`;
+
+  // Animation des barres (décalée de 50ms pour laisser le DOM se rendre)
+  setTimeout(() => {
+    document.querySelectorAll('.card-bar-fill').forEach(bar => {
+      bar.style.transition = 'width 1s cubic-bezier(.16,1,.3,1)';
+      bar.style.width = bar.dataset.target;
+    });
+  }, 50);
+}
+
+// ── Gestion des chips de filtre ───────────────────────────
+function toggleChip(chip, groupe) {
+  // Désactiver tous les chips du même groupe
+  document.querySelectorAll(`[data-filter="${groupe}"]`).forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  filtresActifs[groupe] = chip.dataset.val;
+  filtrer();
+}
+
+// ── Reset filtres ─────────────────────────────────────────
+function resetFiltres() {
+  document.getElementById('search').value = '';
+  document.getElementById('score-min').value = 0;
+  document.getElementById('score-min-val').textContent = '0';
+  document.getElementById('sort-select').value = 'score';
+  ['statut','secteur','profil'].forEach(groupe => {
+    filtresActifs[groupe] = 'tous';
+    document.querySelectorAll(`[data-filter="${groupe}"]`).forEach(c => c.classList.remove('active'));
+    document.querySelector(`[data-filter="${groupe}"][data-val="tous"]`).classList.add('active');
+  });
+  filtrer();
+}
+
+// ── Modal détail entreprise ───────────────────────────────
+function ouvrirModal(id) {
+  const e = ENTREPRISES.find(x => x.id === id);
+  if (!e) return;
+
+  document.getElementById('modal-nom').textContent  = e.nom;
+  document.getElementById('modal-meta').textContent = `${e.secteurLabel} · ${e.region} · Score ${e.score}/100 · ${e.profil}`;
+
+  document.getElementById('modal-kpis').innerHTML = `
+    <div><div class="modal-kpi-val">${fmtFull(e.ca)}</div><div class="modal-kpi-lbl">CA</div></div>
+    <div><div class="modal-kpi-val">${fmtFull(e.ebitda)}</div><div class="modal-kpi-lbl">EBITDA</div></div>
+    <div><div class="modal-kpi-val">${e.margeEBITDA.toFixed(1)}%</div><div class="modal-kpi-lbl">Marge EBITDA</div></div>
+    <div><div class="modal-kpi-val">${fmtFull(e.resNet)}</div><div class="modal-kpi-lbl">Résultat net</div></div>
+    <div><div class="modal-kpi-val">${e.margeNette.toFixed(1)}%</div><div class="modal-kpi-lbl">Marge nette</div></div>
+    <div><div class="modal-kpi-val">${e.croissanceCA > 0 ? '+' : ''}${e.croissanceCA.toFixed(1)}%</div><div class="modal-kpi-lbl">Croissance CA</div></div>
+  `;
+
+  document.getElementById('modal-criteres').innerHTML = e.criteres.map(c => `
+    <div class="modal-crit-row">
+      <span class="modal-crit-name">${c.nom}</span>
+      <div class="modal-crit-bar-track">
+        <div class="modal-crit-bar-fill" style="width:${(c.pts/c.max)*100}%"></div>
+      </div>
+      <span class="modal-crit-pts">${c.pts}/${c.max}</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:-4px;padding-left:168px">${c.note}</div>
+  `).join('');
+
+  document.getElementById('modal-desc').textContent = e.desc;
+  document.getElementById('modal').classList.add('open');
+}
+
+function fermerModal(e) {
+  if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('open');
+}
+
+// ── Initialisation ────────────────────────────────────────
+filtrer();
+</script>
+</body>
+</html>

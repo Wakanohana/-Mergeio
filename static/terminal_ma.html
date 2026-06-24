@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M&A IA — Terminal de marché</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #0e0f11;
+  --paper:  #f5f2ec;
+  --cream:  #ede9e0;
+  --border: #d4cfc5;
+  --muted:  #6b6760;
+  --gold:   #c8a84b;
+  --gold2:  #e8c96b;
+  --green:  #2a9d5c;
+  --green-bg: #e8f7ef;
+  --red:    #d64242;
+  --red-bg: #fdeaea;
+  --amber:  #c07a1a;
+  --amber-bg: #fef3e0;
+  --white:  #ffffff;
+  --terminal-bg: #0b0d10;
+  --terminal-green: #00e676;
+  --terminal-dim: #3a4250;
+  --font-d: 'DM Serif Display', serif;
+  --font-b: 'Manrope', sans-serif;
+  --font-m: 'DM Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--ink); color: var(--paper); font-family: var(--font-b); line-height: 1.5; overflow-x: hidden; }
+
+/* ── Barre de navigation ─────────────────────────────── */
+.topbar {
+  background: #070809;
+  border-bottom: 1px solid #1e2228;
+  padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 48px; position: sticky; top: 0; z-index: 100;
+}
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.logo { font-family: var(--font-m); font-size: 12px; letter-spacing: .12em; background: var(--gold); color: var(--ink); padding: 3px 9px; border-radius: 2px; font-weight: 600; }
+.nav-links { display: flex; gap: 2px; }
+.nav-link { font-family: var(--font-m); font-size: 11px; letter-spacing: .07em; color: rgba(255,255,255,.3); padding: 5px 12px; border-radius: 3px; cursor: pointer; text-decoration: none; transition: all .15s; }
+.nav-link:hover, .nav-link.active { background: rgba(255,255,255,.06); color: rgba(255,255,255,.85); }
+
+/* ── Horloge en direct ───────────────────────────────── */
+.live-bar {
+  background: #070809;
+  border-bottom: 1px solid #1e2228;
+  padding: 7px 24px;
+  display: flex; align-items: center; gap: 24px; overflow-x: auto;
+}
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--terminal-green); animation: pulse 1.6s ease-in-out infinite; flex-shrink: 0; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+.live-time { font-family: var(--font-m); font-size: 11px; color: rgba(255,255,255,.4); letter-spacing: .08em; flex-shrink: 0; }
+.ticker-strip { display: flex; gap: 28px; align-items: center; }
+.ticker-item { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.ticker-name { font-family: var(--font-m); font-size: 11px; color: rgba(255,255,255,.5); letter-spacing: .06em; }
+.ticker-val  { font-family: var(--font-m); font-size: 12px; font-weight: 600; }
+.ticker-delta { font-family: var(--font-m); font-size: 10px; padding: 1px 5px; border-radius: 3px; }
+.up   { color: var(--terminal-green); }
+.dn   { color: var(--red); }
+.up-bg { background: rgba(0,230,118,.12); color: var(--terminal-green); }
+.dn-bg { background: rgba(214,66,66,.12); color: var(--red); }
+
+/* ── Layout principal ────────────────────────────────── */
+.layout { display: grid; grid-template-columns: 1fr 320px; gap: 0; height: calc(100vh - 84px); }
+
+/* ── Colonne gauche ──────────────────────────────────── */
+.col-main { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Tableau de cotation ─────────────────────────────── */
+.panel { background: #111318; border: 1px solid #1e2228; border-radius: 6px; overflow: hidden; }
+.panel-header { padding: 12px 16px; border-bottom: 1px solid #1e2228; display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-family: var(--font-m); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.4); }
+.panel-badge { font-family: var(--font-m); font-size: 10px; letter-spacing: .08em; padding: 2px 8px; border-radius: 10px; background: rgba(0,230,118,.1); color: var(--terminal-green); }
+
+/* ── Table de cotation ───────────────────────────────── */
+.cote-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cote-table th { font-family: var(--font-m); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.25); padding: 8px 12px; text-align: right; border-bottom: 1px solid #1e2228; }
+.cote-table th:first-child { text-align: left; }
+.cote-table td { padding: 10px 12px; border-bottom: 1px solid #15181e; text-align: right; font-family: var(--font-m); font-size: 12px; vertical-align: middle; }
+.cote-table td:first-child { text-align: left; }
+.cote-table tr:last-child td { border-bottom: none; }
+.cote-table tr { transition: background .15s; cursor: pointer; }
+.cote-table tr:hover { background: rgba(255,255,255,.025); }
+.cote-table tr.selected { background: rgba(200,168,75,.07); }
+
+.cie-name { font-family: var(--font-b); font-size: 13px; font-weight: 600; color: rgba(255,255,255,.9); }
+.cie-sector { font-family: var(--font-m); font-size: 10px; color: rgba(255,255,255,.3); margin-top: 1px; letter-spacing: .04em; }
+.score-chip { display: inline-block; font-family: var(--font-m); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 3px; }
+.sc-p { background: rgba(42,157,92,.15); color: #4ade80; }
+.sc-s { background: rgba(192,122,26,.15); color: #fbbf24; }
+.sc-d { background: rgba(214,66,66,.15); color: #f87171; }
+
+.flash { animation: flash-anim .5s ease; }
+@keyframes flash-anim { 0%{background:rgba(0,230,118,.18)} 100%{background:transparent} }
+
+.mini-chart { display: flex; align-items: flex-end; gap: 2px; height: 24px; }
+.mini-bar { width: 4px; border-radius: 1px 1px 0 0; transition: height .4s; }
+
+/* ── Indices de marché ───────────────────────────────── */
+.indices-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #1e2228; border-radius: 6px; overflow: hidden; border: 1px solid #1e2228; }
+.indice-cell { background: #111318; padding: 14px 16px; }
+.indice-label { font-family: var(--font-m); font-size: 9px; letter-spacing: .1em; color: rgba(255,255,255,.3); text-transform: uppercase; margin-bottom: 6px; }
+.indice-val { font-family: var(--font-d); font-size: 20px; color: rgba(255,255,255,.9); }
+.indice-delta { font-family: var(--font-m); font-size: 11px; margin-top: 3px; }
+
+/* ── Graphique de tendance ───────────────────────────── */
+.chart-area { padding: 16px; }
+.chart-title { font-family: var(--font-m); font-size: 10px; letter-spacing: .1em; color: rgba(255,255,255,.35); text-transform: uppercase; margin-bottom: 12px; }
+svg.sparkline { width: 100%; height: 80px; }
+
+/* ── Colonne droite ──────────────────────────────────── */
+.col-side { background: #0d0f12; border-left: 1px solid #1e2228; overflow-y: auto; display: flex; flex-direction: column; }
+
+/* ── Fiche sélectionnée ──────────────────────────────── */
+.detail-panel { padding: 16px; border-bottom: 1px solid #1e2228; }
+.detail-cie { font-family: var(--font-d); font-size: 18px; color: rgba(255,255,255,.9); margin-bottom: 2px; }
+.detail-meta { font-family: var(--font-m); font-size: 10px; color: rgba(255,255,255,.3); letter-spacing: .06em; }
+.detail-score { font-family: var(--font-d); font-size: 42px; line-height: 1; margin: 12px 0 4px; }
+.detail-qual { font-family: var(--font-m); font-size: 11px; letter-spacing: .08em; }
+.detail-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #1e2228; margin: 12px 0; border-radius: 4px; overflow: hidden; }
+.detail-kpi { background: #111318; padding: 10px 12px; }
+.detail-kpi-val { font-family: var(--font-m); font-size: 13px; font-weight: 600; }
+.detail-kpi-lbl { font-family: var(--font-m); font-size: 9px; color: rgba(255,255,255,.3); letter-spacing: .08em; text-transform: uppercase; margin-top: 2px; }
+.val-range { font-family: var(--font-d); font-size: 16px; color: var(--gold); margin-top: 8px; }
+.val-range-lbl { font-family: var(--font-m); font-size: 9px; color: rgba(255,255,255,.3); letter-spacing: .08em; text-transform: uppercase; margin-top: 2px; }
+
+/* Barres de critères dans la fiche */
+.crit-row { margin-bottom: 10px; }
+.crit-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.crit-name { font-family: var(--font-m); font-size: 10px; color: rgba(255,255,255,.5); letter-spacing: .04em; }
+.crit-pts  { font-family: var(--font-m); font-size: 10px; color: rgba(255,255,255,.3); }
+.crit-track { height: 3px; background: #1e2228; border-radius: 10px; overflow: hidden; }
+.crit-fill  { height: 100%; border-radius: 10px; background: var(--gold); transition: width 1s cubic-bezier(.16,1,.3,1); }
+
+/* ── Alertes ─────────────────────────────────────────── */
+.alerts-panel { flex: 1; padding: 16px; }
+.alerts-title { font-family: var(--font-m); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.3); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.alert-badge { background: var(--red); color: white; font-size: 9px; padding: 1px 5px; border-radius: 10px; }
+.alert-item { background: #111318; border: 1px solid #1e2228; border-radius: 4px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s; }
+.alert-item:hover { border-color: #2e3340; }
+.alert-item.new { border-left: 2px solid var(--terminal-green); }
+.alert-item.warn { border-left: 2px solid var(--gold); }
+.alert-item.info { border-left: 2px solid rgba(255,255,255,.2); }
+.alert-time { font-family: var(--font-m); font-size: 9px; color: rgba(255,255,255,.25); letter-spacing: .06em; margin-bottom: 3px; }
+.alert-text { font-family: var(--font-b); font-size: 12px; color: rgba(255,255,255,.75); line-height: 1.4; }
+.alert-tag  { font-family: var(--font-m); font-size: 9px; margin-top: 4px; }
+
+/* ── Bouton action ───────────────────────────────────── */
+.action-btn { margin: 0 16px 16px; padding: 10px; background: linear-gradient(135deg, #c8a84b, #e8c96b); color: var(--ink); border: none; border-radius: 4px; font-family: var(--font-m); font-size: 11px; letter-spacing: .08em; font-weight: 600; cursor: pointer; width: calc(100% - 32px); transition: opacity .15s; }
+.action-btn:hover { opacity: .88; }
+
+/* ── Paramétrer alerte ───────────────────────────────── */
+.alert-config { background: #111318; border: 1px solid #1e2228; border-radius: 4px; padding: 12px; margin: 0 16px 16px; }
+.alert-config-title { font-family: var(--font-m); font-size: 10px; letter-spacing: .08em; color: rgba(255,255,255,.35); text-transform: uppercase; margin-bottom: 10px; }
+.alert-config label { display: block; font-family: var(--font-m); font-size: 10px; color: rgba(255,255,255,.4); letter-spacing: .05em; margin-bottom: 4px; }
+.alert-config input, .alert-config select {
+  width: 100%; background: #0b0d10; border: 1px solid #2a2e38; border-radius: 3px;
+  color: rgba(255,255,255,.7); font-family: var(--font-m); font-size: 11px;
+  padding: 6px 8px; outline: none; margin-bottom: 8px;
+}
+.alert-config input:focus, .alert-config select:focus { border-color: var(--gold); }
+.set-alert-btn { width: 100%; padding: 7px; background: rgba(200,168,75,.15); border: 1px solid var(--gold); border-radius: 3px; color: var(--gold); font-family: var(--font-m); font-size: 10px; letter-spacing: .08em; cursor: pointer; transition: background .15s; }
+.set-alert-btn:hover { background: rgba(200,168,75,.25); }
+</style>
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────── -->
+<nav class="topbar">
+  <div class="topbar-left">
+    <span class="logo">M&A·IA</span>
+    <div class="nav-links">
+      <a class="nav-link" href="dashboard_ma.html">Analyser un P&L</a>
+      <a class="nav-link" href="marketplace_ma.html">Marketplace</a>
+      <a class="nav-link active">Terminal de marché</a>
+    </div>
+  </div>
+  <span style="font-family:var(--font-m);font-size:10px;color:rgba(255,255,255,.25);letter-spacing:.08em">PHASE 4 · LIVE</span>
+</nav>
+
+<!-- ── Bande de cours en direct ────────────────────────── -->
+<div class="live-bar">
+  <div class="live-dot"></div>
+  <div class="live-time" id="horloge">--:--:--</div>
+  <div class="ticker-strip" id="ticker-strip">
+    <!-- rempli par JS -->
+  </div>
+</div>
+
+<!-- ── Layout ─────────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- Colonne principale -->
+  <div class="col-main">
+
+    <!-- Indices synthétiques -->
+    <div class="indices-grid" id="indices-grid">
+      <div class="indice-cell">
+        <div class="indice-label">Score moyen marché</div>
+        <div class="indice-val" id="idx-score">—</div>
+        <div class="indice-delta up" id="idx-score-d">—</div>
+      </div>
+      <div class="indice-cell">
+        <div class="indice-label">Valorisation totale</div>
+        <div class="indice-val" id="idx-valo">—</div>
+        <div class="indice-delta" id="idx-valo-d">—</div>
+      </div>
+      <div class="indice-cell">
+        <div class="indice-label">Dossiers Premium</div>
+        <div class="indice-val" id="idx-premium">—</div>
+        <div class="indice-delta up" id="idx-premium-d">—</div>
+      </div>
+      <div class="indice-cell">
+        <div class="indice-label">Alertes actives</div>
+        <div class="indice-val" id="idx-alertes">—</div>
+        <div class="indice-delta" id="idx-alertes-d">—</div>
+      </div>
+    </div>
+
+    <!-- Tableau de cotation -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Cotation des entreprises</span>
+        <span class="panel-badge">● LIVE</span>
+      </div>
+      <table class="cote-table" id="cote-table">
+        <thead>
+          <tr>
+            <th>Entreprise</th>
+            <th>Score</th>
+            <th>Variation</th>
+            <th>CA</th>
+            <th>EBITDA</th>
+            <th>Valorisation</th>
+            <th>Tendance</th>
+          </tr>
+        </thead>
+        <tbody id="cote-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Graphique de tendance de l'entreprise sélectionnée -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title" id="chart-panel-title">Évolution du score — sélectionnez une ligne</span>
+        <span class="panel-badge" id="chart-panel-score">—</span>
+      </div>
+      <div class="chart-area">
+        <svg class="sparkline" id="main-chart" viewBox="0 0 600 80" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Colonne droite : fiche + alertes -->
+  <div class="col-side">
+
+    <!-- Fiche de détail -->
+    <div class="detail-panel" id="detail-panel">
+      <div class="detail-cie" id="d-nom">Sélectionnez une entreprise</div>
+      <div class="detail-meta" id="d-meta">Cliquez sur une ligne du tableau</div>
+      <div class="detail-score" id="d-score" style="color:var(--gold)">—</div>
+      <div class="detail-qual" id="d-qual" style="color:rgba(255,255,255,.4)">—</div>
+      <div class="detail-kpis" id="d-kpis">
+        <div class="detail-kpi"><div class="detail-kpi-val">—</div><div class="detail-kpi-lbl">CA</div></div>
+        <div class="detail-kpi"><div class="detail-kpi-val">—</div><div class="detail-kpi-lbl">EBITDA</div></div>
+        <div class="detail-kpi"><div class="detail-kpi-val">—</div><div class="detail-kpi-lbl">Marge nette</div></div>
+        <div class="detail-kpi"><div class="detail-kpi-val">—</div><div class="detail-kpi-lbl">Croissance</div></div>
+      </div>
+      <div class="val-range" id="d-val">—</div>
+      <div class="val-range-lbl">Fourchette de valorisation</div>
+      <div style="margin-top:14px" id="d-criteres"></div>
+    </div>
+
+    <!-- Bouton action -->
+    <button class="action-btn" id="action-btn" onclick="alert('Mise en relation sécurisée — Phase 5 : authentification & messagerie chiffrée')">
+      Contacter le cédant →
+    </button>
+
+    <!-- Configurer une alerte -->
+    <div class="alert-config">
+      <div class="alert-config-title">Paramétrer une alerte</div>
+      <label>Type d'alerte</label>
+      <select id="alert-type">
+        <option>Score ≥ seuil</option>
+        <option>Nouveau dossier — secteur</option>
+        <option>Variation score > 5pts</option>
+        <option>Valorisation ≤ budget</option>
+      </select>
+      <label>Valeur déclenchante</label>
+      <input type="text" id="alert-val" placeholder="Ex : 75 ou Tech ou 500 000 €">
+      <button class="set-alert-btn" onclick="ajouterAlerte()">+ Créer l'alerte</button>
+    </div>
+
+    <!-- Flux d'alertes -->
+    <div class="alerts-panel">
+      <div class="alerts-title">
+        Flux d'alertes
+        <span class="alert-badge" id="alert-count">3</span>
+      </div>
+      <div id="alerts-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  TERMINAL.JS — Tableau de bord "bourse" temps réel
+//  Phase 4 de la plateforme M&A IA
+// ═══════════════════════════════════════════════════════════
+
+// ── Bloc 1 : Données de marché ────────────────────────────
+// Mêmes entreprises que la Marketplace, enrichies d'un historique
+// de scores simulé sur 20 points de temps (= "cours boursiers")
+
+const MARCHE = [
+  { id:1, nom:"TechDistrib SARL",      secteur:"Distribution",  statut:"vente",     score:100, ca:1_550_000, ebitda:461_000, margeNette:20.7, croissance:29.2, valBas:2_766_000, valHaut:3_688_000, profil:"Premium",
+    historique:[82,85,87,89,91,90,93,95,94,96,97,96,98,99,100,100,99,100,100,100] },
+  { id:2, nom:"AlphaLogix SAS",        secteur:"Tech B2B",      statut:"opportunite",score:93,  ca:650_000,   ebitda:182_000, margeNette:19.1, croissance:38.3, valBas:1_092_000, valHaut:1_456_000, profil:"Premium",
+    historique:[70,72,74,76,78,79,81,83,84,85,86,87,88,89,90,91,91,92,93,93] },
+  { id:3, nom:"MedTech Devices",       secteur:"Médical",       statut:"opportunite",score:88,  ca:890_000,   ebitda:187_000, margeNette:15.3, croissance:22.0, valBas:1_122_000, valHaut:1_496_000, profil:"Premium",
+    historique:[75,76,77,78,79,80,81,82,83,84,84,85,86,86,87,87,88,88,88,88] },
+  { id:4, nom:"BioClean Expertise",    secteur:"Environnement", statut:"vente",      score:78,  ca:980_000,   ebitda:196_000, margeNette:13.0, croissance:14.6, valBas:1_176_000, valHaut:1_568_000, profil:"Premium",
+    historique:[68,69,70,71,72,72,73,73,74,74,75,75,76,76,77,77,77,78,78,78] },
+  { id:5, nom:"Menuiserie Duval",      secteur:"Industrie",     statut:"vente",      score:56,  ca:1_200_000, ebitda:144_000, margeNette:7.0,  croissance:5.2,  valBas:576_000,   valHaut:864_000,   profil:"Standard",
+    historique:[52,53,52,54,53,55,54,55,55,56,55,56,56,56,57,56,57,56,56,56] },
+  { id:6, nom:"Imprimerie Centrale",   secteur:"Industrie",     statut:"vente",      score:51,  ca:2_100_000, ebitda:252_000, margeNette:7.0,  croissance:2.8,  valBas:1_008_000, valHaut:1_512_000, profil:"Standard",
+    historique:[50,50,51,50,51,51,52,51,52,51,51,52,51,51,52,51,52,51,51,51] },
+  { id:7, nom:"CoachDev Formation",    secteur:"Formation",     statut:"vente",      score:43,  ca:420_000,   ebitda:63_000,  margeNette:9.0,  croissance:-3.1, valBas:157_500,   valHaut:252_000,   profil:"Décote",
+    historique:[48,47,47,46,46,46,45,45,45,44,44,44,44,43,43,43,43,43,43,43] },
+  { id:8, nom:"Maison Leroux",         secteur:"Commerce",      statut:"vente",      score:31,  ca:380_000,   ebitda:34_000,  margeNette:3.7,  croissance:8.5,  valBas:85_000,    valHaut:136_000,   profil:"Décote",
+    historique:[33,33,32,32,32,31,31,32,31,31,31,30,31,31,31,31,31,31,31,31] },
+];
+
+// Scores légèrement fluctuants — simuler la mise à jour en temps réel
+// (En production : ces données viendraient d'une API backend)
+let scoresLive = MARCHE.map(e => ({ ...e, scoreLive: e.score, delta: 0 }));
+let selectedId = null;
+
+// ── Bloc 2 : Horloge en temps réel ───────────────────────
+// setInterval = "répéter cette fonction toutes les X millisecondes"
+// Équivalent Python : une boucle while True avec time.sleep()
+function majHorloge() {
+  const now = new Date();
+  document.getElementById('horloge').textContent =
+    now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+setInterval(majHorloge, 1000);
+majHorloge();
+
+// ── Bloc 3 : Simulation des fluctuations de score ─────────
+// En production, ce serait remplacé par un appel API
+// qui récupère les scores recalculés côté serveur.
+function fluctuerScores() {
+  scoresLive = scoresLive.map(e => {
+    // Petite variation aléatoire entre -1 et +1
+    const variation = (Math.random() - 0.5) * 1.4;
+    const nouveau   = Math.max(0, Math.min(100, e.scoreLive + variation));
+    const delta     = nouveau - e.scoreLive;
+    return { ...e, scoreLive: parseFloat(nouveau.toFixed(1)), delta };
+  });
+  renderTableau();
+  majIndices();
+  if (selectedId) afficherDetail(selectedId);
+}
+setInterval(fluctuerScores, 3000); // mise à jour toutes les 3 secondes
+
+// ── Bloc 4 : Ticker défilant (bande du haut) ─────────────
+function renderTicker() {
+  const strip = document.getElementById('ticker-strip');
+  strip.innerHTML = scoresLive.map(e => {
+    const cl = e.delta >= 0 ? 'up' : 'dn';
+    const signe = e.delta >= 0 ? '▲' : '▼';
+    return `<div class="ticker-item">
+      <span class="ticker-name">${e.nom.split(' ')[0].toUpperCase()}</span>
+      <span class="ticker-val ${cl}">${e.scoreLive.toFixed(1)}</span>
+      <span class="ticker-delta ${e.delta >= 0 ? 'up-bg' : 'dn-bg'}">${signe}${Math.abs(e.delta).toFixed(1)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Bloc 5 : Indices synthétiques (tableau de bord résumé) ─
+function majIndices() {
+  const scoreMoyen = scoresLive.reduce((s,e) => s + e.scoreLive, 0) / scoresLive.length;
+  const valoTotale = scoresLive.reduce((s,e) => s + (e.valBas + e.valHaut) / 2, 0);
+  const premium    = scoresLive.filter(e => e.profil === 'Premium').length;
+
+  document.getElementById('idx-score').textContent   = scoreMoyen.toFixed(1);
+  document.getElementById('idx-score-d').textContent = '▲ +2.3 pts (30j)';
+  document.getElementById('idx-valo').textContent    = fmt(valoTotale);
+  document.getElementById('idx-valo-d').textContent  = '▲ +8.4%';
+  document.getElementById('idx-premium').textContent = premium;
+  document.getElementById('idx-premium-d').textContent = '= stable';
+  document.getElementById('idx-alertes').textContent = alertesData.length;
+  document.getElementById('idx-alertes-d').textContent = alertesData.filter(a => a.type === 'new').length + ' nouvelles';
+}
+
+// ── Bloc 6 : Rendu du tableau de cotation ────────────────
+function classProfil(p) {
+  return p === 'Premium' ? 'sc-p' : p === 'Standard' ? 'sc-s' : 'sc-d';
+}
+
+function miniSparkline(historique) {
+  const max = Math.max(...historique);
+  const min = Math.min(...historique);
+  return historique.map((v, i) => {
+    const h   = max === min ? 50 : ((v - min) / (max - min)) * 22 + 2;
+    const col = i === historique.length - 1 ? '#c8a84b' : (v >= historique[0] ? '#2a9d5c' : '#d64242');
+    return `<div class="mini-bar" style="height:${h}px;background:${col}"></div>`;
+  }).join('');
+}
+
+function renderTableau() {
+  const tbody = document.getElementById('cote-body');
+  tbody.innerHTML = scoresLive.map(e => {
+    const deltaSign = e.delta >= 0 ? '+' : '';
+    const deltaCl   = e.delta >= 0 ? 'up' : 'dn';
+    const selected  = e.id === selectedId ? ' selected' : '';
+    const flashCl   = Math.abs(e.delta) > 0.5 ? ' flash' : '';
+    return `<tr class="${selected}${flashCl}" onclick="afficherDetail(${e.id})">
+      <td>
+        <div class="cie-name">${e.nom}</div>
+        <div class="cie-sector">${e.secteur} · ${e.statut === 'vente' ? 'À CÉDER' : 'OPPORTUNITÉ'}</div>
+      </td>
+      <td><span class="score-chip ${classProfil(e.profil)}">${e.scoreLive.toFixed(1)}</span></td>
+      <td class="${deltaCl}">${deltaSign}${e.delta.toFixed(2)}</td>
+      <td>${fmt(e.ca)}</td>
+      <td>${fmt(e.ebitda)}</td>
+      <td>${fmt((e.valBas + e.valHaut) / 2)}</td>
+      <td><div class="mini-chart">${miniSparkline(e.historique)}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Bloc 7 : Graphique principal de tendance ─────────────
+// On dessine une courbe SVG à la main — pas de bibliothèque externe.
+// SVG = format vectoriel natif du navigateur, comme matplotlib en Python.
+
+function dessinerCourbe(historique, svgId) {
+  const svg    = document.getElementById(svgId);
+  const W = 600, H = 80, pad = 10;
+  const max    = Math.max(...historique) + 2;
+  const min    = Math.min(...historique) - 2;
+  const pts    = historique.map((v, i) => {
+    const x = pad + (i / (historique.length - 1)) * (W - 2 * pad);
+    const y = H - pad - ((v - min) / (max - min)) * (H - 2 * pad);
+    return `${x},${y}`;
+  });
+
+  // Zone remplie sous la courbe (dégradé)
+  const aire = `M${pts[0]} ` + pts.slice(1).map(p => `L${p}`).join(' ') + ` L${W - pad},${H} L${pad},${H} Z`;
+  // Ligne principale
+  const ligne = `M${pts[0]} ` + pts.slice(1).map(p => `L${p}`).join(' ');
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#c8a84b" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="#c8a84b" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${aire}" fill="url(#grad)"/>
+    <path d="${ligne}" fill="none" stroke="#c8a84b" stroke-width="1.5" stroke-linejoin="round"/>
+    <circle cx="${pts[pts.length-1].split(',')[0]}" cy="${pts[pts.length-1].split(',')[1]}" r="3" fill="#c8a84b"/>
+  `;
+}
+
+// ── Bloc 8 : Fiche de détail (colonne droite) ────────────
+function afficherDetail(id) {
+  selectedId = id;
+  const e    = scoresLive.find(x => x.id === id);
+  if (!e) return;
+
+  // Marquer la ligne sélectionnée
+  document.querySelectorAll('#cote-body tr').forEach(tr => tr.classList.remove('selected'));
+  document.querySelectorAll('#cote-body tr').forEach((tr, i) => {
+    if (scoresLive[i]?.id === id) tr.classList.add('selected');
+  });
+
+  document.getElementById('d-nom').textContent   = e.nom;
+  document.getElementById('d-meta').textContent  = `${e.secteur} · ${e.profil} · ${e.statut === 'vente' ? 'À céder' : 'Opportunité'}`;
+  document.getElementById('d-score').textContent = e.scoreLive.toFixed(1);
+  document.getElementById('d-score').style.color = e.profil === 'Premium' ? '#4ade80' : e.profil === 'Standard' ? '#fbbf24' : '#f87171';
+  document.getElementById('d-qual').textContent  = e.profil === 'Premium' ? '🟢 Profil Premium' : e.profil === 'Standard' ? '🟡 Profil Standard' : '🔴 Profil Décote';
+
+  document.getElementById('d-kpis').innerHTML = `
+    <div class="detail-kpi"><div class="detail-kpi-val">${fmt(e.ca)}</div><div class="detail-kpi-lbl">CA</div></div>
+    <div class="detail-kpi"><div class="detail-kpi-val">${fmt(e.ebitda)}</div><div class="detail-kpi-lbl">EBITDA</div></div>
+    <div class="detail-kpi"><div class="detail-kpi-val">${e.margeNette.toFixed(1)}%</div><div class="detail-kpi-lbl">Marge nette</div></div>
+    <div class="detail-kpi"><div class="detail-kpi-val">${e.croissance > 0 ? '+' : ''}${e.croissance.toFixed(1)}%</div><div class="detail-kpi-lbl">Croissance</div></div>
+  `;
+  document.getElementById('d-val').textContent = `${fmt(e.valBas)} – ${fmt(e.valHaut)}`;
+
+  // Critères simplifiés depuis le score
+  const criteres = [
+    { nom: "Croissance CA",    pts: e.croissance > 20 ? 25 : e.croissance > 10 ? 15 : e.croissance > 0 ? 8 : 0 },
+    { nom: "Marge EBITDA",     pts: (e.ebitda/e.ca*100) > 20 ? 25 : (e.ebitda/e.ca*100) > 10 ? 18 : 10 },
+    { nom: "Rentabilité nette",pts: e.margeNette > 10 ? 25 : e.margeNette > 5 ? 18 : 10 },
+    { nom: "Régularité",       pts: Math.round(e.scoreLive) - (e.croissance > 20 ? 25 : e.croissance > 10 ? 15 : e.croissance > 0 ? 8 : 0) - ((e.ebitda/e.ca*100) > 20 ? 25 : 18) - (e.margeNette > 10 ? 25 : 18) },
+  ];
+  document.getElementById('d-criteres').innerHTML = criteres.map(c => `
+    <div class="crit-row">
+      <div class="crit-header"><span class="crit-name">${c.nom}</span><span class="crit-pts">${Math.max(0,c.pts)}/25</span></div>
+      <div class="crit-track"><div class="crit-fill" style="width:${Math.max(0,c.pts)/25*100}%"></div></div>
+    </div>`).join('');
+
+  // Graphique principal
+  document.getElementById('chart-panel-title').textContent = `Évolution du score — ${e.nom}`;
+  document.getElementById('chart-panel-score').textContent = `${e.scoreLive.toFixed(1)} / 100`;
+  dessinerCourbe(e.historique, 'main-chart');
+}
+
+// ── Bloc 9 : Système d'alertes ────────────────────────────
+// Les alertes sont les notifications push "à la bourse"
+// En Python, ce serait un scheduler (APScheduler ou Celery)
+let alertesData = [
+  { type: 'new',  time: 'il y a 2 min',  text: 'AlphaLogix SAS : score franchi 93 pts — seuil alerte atteint', tag: '🟢 Score ≥ 90' },
+  { type: 'warn', time: 'il y a 11 min', text: 'CoachDev Formation : score en baisse continue (−5 pts / 30j)', tag: '🟡 Tendance négative' },
+  { type: 'info', time: 'il y a 38 min', text: 'Nouveau dossier ajouté dans le secteur Tech B2B', tag: 'ℹ️ Nouveau dossier' },
+];
+
+function renderAlertes() {
+  const list = document.getElementById('alerts-list');
+  list.innerHTML = alertesData.map(a => `
+    <div class="alert-item ${a.type}">
+      <div class="alert-time">${a.time}</div>
+      <div class="alert-text">${a.text}</div>
+      <div class="alert-tag">${a.tag}</div>
+    </div>`).join('');
+  document.getElementById('alert-count').textContent = alertesData.length;
+  document.getElementById('idx-alertes').textContent = alertesData.length;
+}
+
+function ajouterAlerte() {
+  const type = document.getElementById('alert-type').value;
+  const val  = document.getElementById('alert-val').value;
+  if (!val.trim()) return;
+  alertesData.unshift({
+    type: 'new',
+    time: 'à l\'instant',
+    text: `Alerte configurée : ${type} → ${val}`,
+    tag: '🔔 Nouvelle alerte'
+  });
+  document.getElementById('alert-val').value = '';
+  renderAlertes();
+}
+
+// ── Bloc 10 : Formatage ───────────────────────────────────
+function fmt(v) {
+  if (v >= 1_000_000) return (v / 1_000_000).toFixed(2).replace('.', ',') + ' M€';
+  if (v >= 1_000)     return (v / 1_000).toFixed(0) + ' k€';
+  return v + ' €';
+}
+
+// ── Initialisation ────────────────────────────────────────
+// On démarre tout : tableau, ticker, indices, alertes
+renderTableau();
+renderTicker();
+majIndices();
+renderAlertes();
+setInterval(renderTicker, 3000);
+
+// Sélectionner automatiquement la première ligne
+afficherDetail(1);
+</script>
+</body>
+</html>
