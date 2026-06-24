@@ -1,16 +1,3 @@
-# ============================================================
-#  REQUIREMENTS.TXT — Dépendances Python
-# ============================================================
-#
-#  Ce fichier liste toutes les bibliothèques dont notre
-#  application a besoin. Render (et pip) le lit et installe
-#  automatiquement tout ce qui est nécessaire.
-#
-#  Commande équivalente en local :
-#  pip install -r requirements.txt
-#
-# ============================================================
-
 flask==3.0.3
 pandas==2.1.4
 numpy==1.26.4
